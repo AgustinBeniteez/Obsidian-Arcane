@@ -147,11 +147,11 @@ public class MainMenuScreen implements Screen {
     }
 
     private void handleInput() {
-        // Navigate with arrow keys
-        if (Gdx.input.isKeyJustPressed(Keys.UP)) {
+        // Navigate with arrow keys or WASD
+        if (Gdx.input.isKeyJustPressed(Keys.UP) || Gdx.input.isKeyJustPressed(Keys.W)) {
             selectedButtonIndex = (selectedButtonIndex - 1 + menuButtons.length) % menuButtons.length;
             updateButtonStyles();
-        } else if (Gdx.input.isKeyJustPressed(Keys.DOWN)) {
+        } else if (Gdx.input.isKeyJustPressed(Keys.DOWN) || Gdx.input.isKeyJustPressed(Keys.S)) {
             selectedButtonIndex = (selectedButtonIndex + 1) % menuButtons.length;
             updateButtonStyles();
         }
