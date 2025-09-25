@@ -14,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.Input.Keys;
 
 /**
  * Main Menu Screen for Obsidian Arcane
@@ -33,7 +34,14 @@ public class MainMenuScreen implements Screen {
     private Image titleImage;
     private TextButton playButton;
     private TextButton optionsButton;
+    private TextButton creditsButton;
     private TextButton exitButton;
+    
+    // Keyboard navigation
+    private TextButton[] menuButtons;
+    private int selectedButtonIndex = 0;
+    private TextButton.TextButtonStyle normalStyle;
+    private TextButton.TextButtonStyle selectedStyle;
     
     public MainMenuScreen(GameStateManager game) {
         this.game = game;
@@ -70,32 +78,47 @@ public class MainMenuScreen implements Screen {
         Skin skin = new Skin();
         skin.add("default-font", buttonFont);
         
-        // Button style
-        TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
-        buttonStyle.font = buttonFont;
-        buttonStyle.fontColor = Color.WHITE;
-        buttonStyle.overFontColor = Color.YELLOW;
-        buttonStyle.downFontColor = Color.GRAY;
+        // Normal button style
+        normalStyle = new TextButton.TextButtonStyle();
+        normalStyle.font = buttonFont;
+        normalStyle.fontColor = Color.WHITE;
+        normalStyle.overFontColor = Color.YELLOW;
+        normalStyle.downFontColor = Color.GRAY;
         
-        skin.add("default", buttonStyle);
+        // Selected button style (highlighted)
+        selectedStyle = new TextButton.TextButtonStyle();
+        selectedStyle.font = buttonFont;
+        selectedStyle.fontColor = Color.YELLOW;
+        selectedStyle.overFontColor = Color.YELLOW;
+        selectedStyle.downFontColor = Color.GRAY;
+        
+        skin.add("default", normalStyle);
         
         // Create UI elements
         titleImage = new Image(titleLogo);
         
-        playButton = new TextButton(localization.getText("menu.play"), buttonStyle);
+        playButton = new TextButton(localization.getText("menu.play"), normalStyle);
         playButton.getLabel().setAlignment(com.badlogic.gdx.utils.Align.left);
         
-        optionsButton = new TextButton(localization.getText("menu.options"), buttonStyle);
+        optionsButton = new TextButton(localization.getText("menu.options"), normalStyle);
         optionsButton.getLabel().setAlignment(com.badlogic.gdx.utils.Align.left);
         
-        exitButton = new TextButton(localization.getText("menu.exit"), buttonStyle);
+        creditsButton = new TextButton(localization.getText("menu.credits"), normalStyle);
+        creditsButton.getLabel().setAlignment(com.badlogic.gdx.utils.Align.left);
+        
+        exitButton = new TextButton(localization.getText("menu.exit"), normalStyle);
         exitButton.getLabel().setAlignment(com.badlogic.gdx.utils.Align.left);
+        
+        // Initialize menu buttons array for keyboard navigation
+        menuButtons = new TextButton[]{playButton, optionsButton, creditsButton, exitButton};
+        updateButtonStyles();
         
         // Configure button listeners
         playButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.startGame();
+                // Mostrar pantalla de selección de partida en lugar de iniciar directamente
+                game.showLoadScreen();
             }
         });
         
@@ -103,6 +126,13 @@ public class MainMenuScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 game.showOptions();
+            }
+        });
+        
+        creditsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.showCredits();
             }
         });
         
@@ -123,10 +153,63 @@ public class MainMenuScreen implements Screen {
         mainTable.add(titleImage).width(800).padBottom(50).left().row();
         mainTable.add(playButton).width(300).height(60).padBottom(20).left().padLeft(10).row();
         mainTable.add(optionsButton).width(300).height(60).padBottom(20).left().padLeft(10).row();
+        mainTable.add(creditsButton).width(300).height(60).padBottom(20).left().padLeft(10).row();
         mainTable.add(exitButton).width(300).height(60).left().padLeft(10).row();
         
         // Add table to stage
         stage.addActor(mainTable);
+    }
+    
+    private void handleInput() {
+        // Navigate up (W key or Up arrow)
+        if (Gdx.input.isKeyJustPressed(Keys.W) || Gdx.input.isKeyJustPressed(Keys.UP)) {
+            selectedButtonIndex--;
+            if (selectedButtonIndex < 0) {
+                selectedButtonIndex = menuButtons.length - 1; // Wrap to last button
+            }
+            updateButtonStyles();
+        }
+        
+        // Navigate down (S key or Down arrow)
+        if (Gdx.input.isKeyJustPressed(Keys.S) || Gdx.input.isKeyJustPressed(Keys.DOWN)) {
+            selectedButtonIndex++;
+            if (selectedButtonIndex >= menuButtons.length) {
+                selectedButtonIndex = 0; // Wrap to first button
+            }
+            updateButtonStyles();
+        }
+        
+        // Select button (Enter or Space)
+        if (Gdx.input.isKeyJustPressed(Keys.ENTER) || Gdx.input.isKeyJustPressed(Keys.SPACE)) {
+            selectCurrentButton();
+        }
+    }
+    
+    private void updateButtonStyles() {
+        for (int i = 0; i < menuButtons.length; i++) {
+            if (i == selectedButtonIndex) {
+                menuButtons[i].setStyle(selectedStyle);
+            } else {
+                menuButtons[i].setStyle(normalStyle);
+            }
+        }
+    }
+    
+    private void selectCurrentButton() {
+        switch (selectedButtonIndex) {
+            case 0: // Play button
+                game.showLoadScreen();
+                break;
+            case 1: // Options button
+                game.showOptions();
+                break;
+            case 2: // Credits button
+                game.showCredits();
+                break;
+            case 3: // Exit button
+                Gdx.app.exit();
+                break;
+        }
     }
 
     /**
@@ -135,6 +218,7 @@ public class MainMenuScreen implements Screen {
     public void refreshUI() {
         playButton.setText(localization.getText("menu.play"));
         optionsButton.setText(localization.getText("menu.options"));
+        creditsButton.setText(localization.getText("menu.credits"));
         exitButton.setText(localization.getText("menu.exit"));
     }
     
@@ -147,6 +231,9 @@ public class MainMenuScreen implements Screen {
     
     @Override
     public void render(float delta) {
+        // Handle keyboard input
+        handleInput();
+        
         // Limpiar pantalla con color oscuro
         Gdx.gl.glClearColor(0.05f, 0.05f, 0.15f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
