@@ -95,63 +95,78 @@ public class Player {
      * Sistema de movimiento WASD con colisiones precisas
      * @param deltaTime Tiempo delta
      */
+    /**
+     * Sistema de movimiento lateral con físicas (gravedad y salto)
+     * @param deltaTime Tiempo delta
+     */
     private void updateMovement(float deltaTime) {
-        Vector2 inputDirection = new Vector2(0, 0);
-        
         // Detectar entrada WASD
-        if (Gdx.input.isKeyPressed(Keys.W)) inputDirection.y += 1;
-        if (Gdx.input.isKeyPressed(Keys.S)) inputDirection.y -= 1;
-        if (Gdx.input.isKeyPressed(Keys.A)) inputDirection.x -= 1;
-        if (Gdx.input.isKeyPressed(Keys.D)) inputDirection.x += 1;
+        float inputX = 0;
+        float inputY = 0;
         
-        // Normalizar para movimiento diagonal consistente
-        if (inputDirection.len() > 0) {
-            inputDirection.nor();
-            velocity.set(inputDirection.scl(speed));
-            
-            // Limitar velocidad máxima
-            if (velocity.len() > maxSpeed) {
-                velocity.nor().scl(maxSpeed);
-            }
-            
-            // Actualizar última dirección para combate
-            lastDirection.set(inputDirection);
+        if (Gdx.input.isKeyPressed(Keys.W)) {
+            inputY = 1;
+            lastDirection.set(0, 1);
+        }
+        if (Gdx.input.isKeyPressed(Keys.S)) {
+            inputY = -1;
+            lastDirection.set(0, -1);
+        }
+        if (Gdx.input.isKeyPressed(Keys.A)) {
+            inputX = -1;
+            lastDirection.set(-1, 0);
+        }
+        if (Gdx.input.isKeyPressed(Keys.D)) {
+            inputX = 1;
+            lastDirection.set(1, 0);
+        }
+        
+        // Aplicar movimiento
+        if (inputX != 0 || inputY != 0) {
+            velocity.x = inputX * speed;
+            velocity.y = inputY * speed;
         } else {
             // Aplicar fricción cuando no hay entrada
-            velocity.scl(friction);
+            velocity.x *= friction;
+            velocity.y *= friction;
+        }
+        
+        // Limitar velocidad máxima
+        if (velocity.len() > maxSpeed) {
+            velocity.nor().scl(maxSpeed);
         }
         
         // Aplicar movimiento con detección de colisiones
         applyMovementWithCollision(deltaTime);
     }
     
-    /**
-     * Aplica el movimiento verificando colisiones en ambos ejes por separado
-     * @param deltaTime Tiempo delta
-     */
-    private void applyMovementWithCollision(float deltaTime) {
-        Vector2 oldPosition = position.cpy();
-        
-        // Movimiento en X
-        float newX = position.x + velocity.x * deltaTime;
-        position.x = newX;
-        updateCollisionBox();
-        
-        if (checkCollisionWithMap()) {
-            position.x = oldPosition.x; // Revertir movimiento en X
-            velocity.x = 0; // Detener velocidad en X
-        }
-        
-        // Movimiento en Y
-        float newY = position.y + velocity.y * deltaTime;
-        position.y = newY;
-        updateCollisionBox();
-        
-        if (checkCollisionWithMap()) {
-            position.y = oldPosition.y; // Revertir movimiento en Y
-            velocity.y = 0; // Detener velocidad en Y
-        }
-    }
+     /**
+      * Aplica el movimiento verificando colisiones en ambos ejes por separado
+      * @param deltaTime Tiempo delta
+      */
+     private void applyMovementWithCollision(float deltaTime) {
+         Vector2 oldPosition = position.cpy();
+         
+         // Movimiento en X
+         float newX = position.x + velocity.x * deltaTime;
+         position.x = newX;
+         updateCollisionBox();
+         
+         if (checkCollisionWithMap()) {
+             position.x = oldPosition.x; // Revertir movimiento en X
+             velocity.x = 0; // Detener velocidad en X
+         }
+         
+         // Movimiento en Y
+         float newY = position.y + velocity.y * deltaTime;
+         position.y = newY;
+         updateCollisionBox();
+         
+         if (checkCollisionWithMap()) {
+             position.y = oldPosition.y; // Revertir movimiento en Y
+             velocity.y = 0; // Detener velocidad en Y
+         }
+     }
     
     /**
      * Verifica colisiones con el mapa usando múltiples puntos de la hitbox

@@ -23,7 +23,9 @@ com\agustinbenitez\obsidianarcane\SaveLoadScreen.class
 com\agustinbenitez\obsidianarcane\OptionsScreen$2.class
 com\agustinbenitez\obsidianarcane\GameplayScreen.class
 com\agustinbenitez\obsidianarcane\GameConfig$FPSOption.class
+com\agustinbenitez\obsidianarcane\CreditsScreen.class
 com\agustinbenitez\obsidianarcane\Main.class
+com\agustinbenitez\obsidianarcane\MainMenuScreen$4.class
 com\agustinbenitez\obsidianarcane\GameConfig.class
 com\agustinbenitez\obsidianarcane\LocalizationManager.class
 com\agustinbenitez\obsidianarcane\GameConfig$Resolution.class

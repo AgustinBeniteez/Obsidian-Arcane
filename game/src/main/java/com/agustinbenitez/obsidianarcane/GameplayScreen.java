@@ -167,11 +167,6 @@ public class GameplayScreen implements Screen {
                  camera.position.x - camera.viewportWidth/2 + 10, 
                  camera.position.y + camera.viewportHeight/2 - 60);
         
-        // Controles
-        font.draw(batch, "WASD: Movimiento | K: Ataque | F5: Guardar | F9: Cargar | M: Menú", 
-                 camera.position.x - camera.viewportWidth/2 + 10, 
-                 camera.position.y - camera.viewportHeight/2 + 40);
-        
         batch.end();
     }
     
@@ -198,11 +193,6 @@ public class GameplayScreen implements Screen {
         // Cargar partida
         if (Gdx.input.isKeyJustPressed(Keys.F9)) {
             game.showLoadScreen();
-        }
-        
-        // Volver al menú
-        if (Gdx.input.isKeyJustPressed(Keys.M)) {
-            game.showMainMenu();
         }
     }
     
