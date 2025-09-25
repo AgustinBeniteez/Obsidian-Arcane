@@ -1,0 +1,7 @@
+{
+  "windowWidth": 1920,
+  "windowHeight": 1080,
+  "fullscreen": true,
+  "vsync": true,
+  "targetFPS": 60
+}

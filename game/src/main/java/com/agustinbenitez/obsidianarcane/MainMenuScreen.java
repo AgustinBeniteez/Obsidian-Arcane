@@ -128,10 +128,21 @@ public class MainMenuScreen implements Screen {
         // Add table to stage
         stage.addActor(mainTable);
     }
+
+    /**
+     * Refresh UI text after language change
+     */
+    public void refreshUI() {
+        playButton.setText(localization.getText("menu.play"));
+        optionsButton.setText(localization.getText("menu.options"));
+        exitButton.setText(localization.getText("menu.exit"));
+    }
     
     @Override
     public void show() {
         Gdx.input.setInputProcessor(stage);
+        // Refresh UI when showing the screen to update language
+        refreshUI();
     }
     
     @Override

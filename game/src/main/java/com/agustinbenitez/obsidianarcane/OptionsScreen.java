@@ -15,7 +15,7 @@ import com.badlogic.gdx.graphics.Color;
 
 /**
  * Options Screen for Obsidian Arcane
- * Allows players to change game settings including language
+ * Allows players to change game settings including language, resolution and display mode
  */
 public class OptionsScreen implements Screen {
     
@@ -25,6 +25,7 @@ public class OptionsScreen implements Screen {
     private BitmapFont font;
     private OrthographicCamera camera;
     private LocalizationManager localization;
+    private GameConfig gameConfig;
 
     // UI Elements
     private Table mainTable;
@@ -32,13 +33,21 @@ public class OptionsScreen implements Screen {
     private Label languageLabel;
     private TextButton spanishButton;
     private TextButton englishButton;
+    
+    // Display settings
+    private Label displayLabel;
+    private Label resolutionLabel;
+    private SelectBox<GameConfig.Resolution> resolutionSelectBox;
+    private CheckBox fullscreenCheckBox;
+    private TextButton applyButton;
     private TextButton backButton;
     
     public OptionsScreen(GameStateManager game) {
         this.game = game;
         
-        // Initialize localization
+        // Initialize localization and config
         this.localization = LocalizationManager.getInstance();
+        this.gameConfig = GameConfig.getInstance();
         
         // Initialize components
         batch = new SpriteBatch();
@@ -66,6 +75,42 @@ public class OptionsScreen implements Screen {
         Skin skin = new Skin();
         skin.add("default-font", font);
         
+        // Create a white pixel texture for UI backgrounds
+        com.badlogic.gdx.graphics.Pixmap pixmap = new com.badlogic.gdx.graphics.Pixmap(1, 1, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
+        pixmap.setColor(Color.WHITE);
+        pixmap.fill();
+        skin.add("white", new com.badlogic.gdx.graphics.Texture(pixmap));
+        pixmap.dispose();
+        
+        // Create larger checkbox texture (32x32 pixels) - unchecked state
+        com.badlogic.gdx.graphics.Pixmap checkboxPixmap = new com.badlogic.gdx.graphics.Pixmap(32, 32, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
+        checkboxPixmap.setColor(Color.DARK_GRAY);
+        checkboxPixmap.fill();
+        // Draw border
+        checkboxPixmap.setColor(Color.WHITE);
+        checkboxPixmap.drawRectangle(0, 0, 32, 32);
+        checkboxPixmap.drawRectangle(1, 1, 30, 30);
+        skin.add("checkbox", new com.badlogic.gdx.graphics.Texture(checkboxPixmap));
+        checkboxPixmap.dispose();
+        
+        // Create checked checkbox texture with checkmark
+        com.badlogic.gdx.graphics.Pixmap checkboxCheckedPixmap = new com.badlogic.gdx.graphics.Pixmap(32, 32, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
+        checkboxCheckedPixmap.setColor(new Color(0.0f, 0.6f, 0.0f, 1.0f)); // Verde más oscuro
+        checkboxCheckedPixmap.fill();
+        // Draw border
+        checkboxCheckedPixmap.setColor(Color.WHITE);
+        checkboxCheckedPixmap.drawRectangle(0, 0, 32, 32);
+        checkboxCheckedPixmap.drawRectangle(1, 1, 30, 30);
+        // Draw checkmark (simple lines)
+        checkboxCheckedPixmap.setColor(Color.WHITE);
+        // Draw checkmark lines
+        for (int i = 0; i < 3; i++) {
+            checkboxCheckedPixmap.drawLine(8 + i, 16, 12 + i, 20);
+            checkboxCheckedPixmap.drawLine(12 + i, 20, 22 + i, 10);
+        }
+        skin.add("checkbox-checked", new com.badlogic.gdx.graphics.Texture(checkboxCheckedPixmap));
+        checkboxCheckedPixmap.dispose();
+        
         // Label style
         Label.LabelStyle labelStyle = new Label.LabelStyle();
         labelStyle.font = font;
@@ -78,15 +123,64 @@ public class OptionsScreen implements Screen {
         buttonStyle.overFontColor = Color.YELLOW;
         buttonStyle.downFontColor = Color.GRAY;
         
+        // SelectBox style
+        SelectBox.SelectBoxStyle selectBoxStyle = new SelectBox.SelectBoxStyle();
+        selectBoxStyle.font = font;
+        selectBoxStyle.fontColor = Color.WHITE;
+        selectBoxStyle.background = skin.newDrawable("white", Color.DARK_GRAY);
+        selectBoxStyle.backgroundOver = skin.newDrawable("white", Color.GRAY);
+        selectBoxStyle.backgroundOpen = skin.newDrawable("white", Color.LIGHT_GRAY);
+        
+        // List style for SelectBox
+        List.ListStyle listStyle = new List.ListStyle();
+        listStyle.font = font;
+        listStyle.fontColorSelected = Color.BLACK;
+        listStyle.fontColorUnselected = Color.WHITE;
+        listStyle.background = skin.newDrawable("white", Color.DARK_GRAY);
+        listStyle.selection = skin.newDrawable("white", Color.YELLOW);
+        selectBoxStyle.listStyle = listStyle;
+        
+        // ScrollPane style for SelectBox
+        ScrollPane.ScrollPaneStyle scrollPaneStyle = new ScrollPane.ScrollPaneStyle();
+        selectBoxStyle.scrollStyle = scrollPaneStyle;
+        
+        // CheckBox style with larger size and visible checkmark
+        CheckBox.CheckBoxStyle checkBoxStyle = new CheckBox.CheckBoxStyle();
+        checkBoxStyle.font = font;
+        checkBoxStyle.fontColor = Color.WHITE;
+        checkBoxStyle.checkboxOn = skin.getDrawable("checkbox-checked");
+        checkBoxStyle.checkboxOff = skin.getDrawable("checkbox");
+        checkBoxStyle.checkboxOver = skin.newDrawable("checkbox", Color.GRAY);
+        checkBoxStyle.checkboxOnOver = skin.newDrawable("checkbox-checked", Color.LIGHT_GRAY);
+        
         skin.add("default", labelStyle);
         skin.add("default", buttonStyle);
+        skin.add("default", selectBoxStyle);
+        skin.add("default", checkBoxStyle);
         
         // Create UI elements
         titleLabel = new Label(localization.getText("options.title"), labelStyle);
-        languageLabel = new Label(localization.getText("options.language") + ":", labelStyle);
         
+        // Language section
+        languageLabel = new Label(localization.getText("options.language") + ":", labelStyle);
         spanishButton = new TextButton(localization.getText("options.spanish"), buttonStyle);
         englishButton = new TextButton(localization.getText("options.english"), buttonStyle);
+        
+        // Display section
+        displayLabel = new Label(localization.getText("options.display") + ":", labelStyle);
+        resolutionLabel = new Label(localization.getText("options.resolution") + ":", labelStyle);
+        
+        // Resolution SelectBox
+        resolutionSelectBox = new SelectBox<>(selectBoxStyle);
+        resolutionSelectBox.setItems(GameConfig.AVAILABLE_RESOLUTIONS);
+        resolutionSelectBox.setSelected(gameConfig.getCurrentResolution());
+        
+        // Fullscreen CheckBox
+        fullscreenCheckBox = new CheckBox(" " + localization.getText("options.fullscreen"), checkBoxStyle);
+        fullscreenCheckBox.setChecked(gameConfig.isFullscreen());
+        
+        // Action buttons
+        applyButton = new TextButton(localization.getText("options.apply"), buttonStyle);
         backButton = new TextButton(localization.getText("options.back"), buttonStyle);
         
         // Configure button listeners
@@ -108,6 +202,13 @@ public class OptionsScreen implements Screen {
             }
         });
         
+        applyButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                applySettings();
+            }
+        });
+        
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -121,19 +222,55 @@ public class OptionsScreen implements Screen {
         mainTable.center();
         
         // Add elements to the table
-        mainTable.add(titleLabel).padBottom(50).row();
-        mainTable.add(languageLabel).padBottom(20).row();
+        mainTable.add(titleLabel).colspan(2).padBottom(30).row();
         
-        // Language buttons in a horizontal table
+        // Language section
+        mainTable.add(languageLabel).colspan(2).padBottom(10).row();
         Table languageTable = new Table();
-        languageTable.add(spanishButton).width(200).height(60).padRight(20);
-        languageTable.add(englishButton).width(200).height(60);
+        languageTable.add(spanishButton).width(150).height(50).padRight(10);
+        languageTable.add(englishButton).width(150).height(50);
+        mainTable.add(languageTable).colspan(2).padBottom(30).row();
         
-        mainTable.add(languageTable).padBottom(50).row();
-        mainTable.add(backButton).width(200).height(60);
+        // Display section
+        mainTable.add(displayLabel).colspan(2).padBottom(10).row();
+        
+        // Resolution
+        mainTable.add(resolutionLabel).padRight(20);
+        mainTable.add(resolutionSelectBox).width(300).height(50).padBottom(10).row();
+        
+        // Fullscreen CheckBox with better layout and size
+        fullscreenCheckBox = new CheckBox(" " + localization.getText("options.fullscreen"), checkBoxStyle);
+        fullscreenCheckBox.setChecked(gameConfig.isFullscreen());
+        mainTable.add(fullscreenCheckBox).colspan(2).height(50).padBottom(30).row();
+        
+        // Action buttons
+        Table buttonTable = new Table();
+        buttonTable.add(applyButton).width(150).height(50).padRight(10);
+        buttonTable.add(backButton).width(150).height(50);
+        mainTable.add(buttonTable).colspan(2);
         
         // Add table to stage
         stage.addActor(mainTable);
+    }
+    
+    /**
+     * Apply the selected settings
+     */
+    private void applySettings() {
+        try {
+            // Apply resolution
+            GameConfig.Resolution selectedResolution = resolutionSelectBox.getSelected();
+            gameConfig.setResolution(selectedResolution);
+            
+            // Apply fullscreen setting
+            gameConfig.setFullscreen(fullscreenCheckBox.isChecked());
+            
+            Gdx.app.log("OptionsScreen", "Configuración aplicada: " + 
+                selectedResolution.displayName + ", Pantalla completa: " + fullscreenCheckBox.isChecked());
+                
+        } catch (Exception e) {
+            Gdx.app.error("OptionsScreen", "Error al aplicar configuración: " + e.getMessage());
+        }
     }
     
     /**
@@ -144,6 +281,11 @@ public class OptionsScreen implements Screen {
         languageLabel.setText(localization.getText("options.language") + ":");
         spanishButton.setText(localization.getText("options.spanish"));
         englishButton.setText(localization.getText("options.english"));
+        displayLabel.setText(localization.getText("options.display") + ":");
+        resolutionLabel.setText(localization.getText("options.resolution") + ":");
+        // Update checkbox text directly
+        fullscreenCheckBox.setText(" " + localization.getText("options.fullscreen"));
+        applyButton.setText(localization.getText("options.apply"));
         backButton.setText(localization.getText("options.back"));
     }
     

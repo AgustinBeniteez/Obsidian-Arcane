@@ -110,6 +110,16 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Plugin para ejecutar la aplicación -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.1</version>
+                <configuration>
+                    <mainClass>com.agustinbenitez.obsidianarcane.Main</mainClass>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

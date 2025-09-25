@@ -12,18 +12,27 @@ public class Main {
         // Game window configuration
         Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
         
+        // Initialize game configuration
+        GameConfig gameConfig = GameConfig.getInstance();
+        
         // Basic window configuration
         config.setTitle("Obsidian Arcane");
-        config.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode());  // Fullscreen by default
         config.setResizable(true);
         config.setMaximized(false);
         
-        // Alternative configuration for windowed mode (commented)
-        // config.setWindowedMode(1920, 1080);  // Full HD resolution
+        // Apply saved configuration
+        if (gameConfig.isFullscreen()) {
+            config.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode());
+        } else {
+            config.setWindowedMode(gameConfig.getWindowWidth(), gameConfig.getWindowHeight());
+        }
         
         // Performance configuration
-        config.setForegroundFPS(60);  // 60 FPS
+        config.setForegroundFPS(gameConfig.getTargetFPS());  // Use configured FPS
         config.setIdleFPS(30);        // 30 FPS when window is not active
+        
+        // VSync configuration
+        config.useVsync(gameConfig.isVsync());
         
         // Create and launch the application
         new Lwjgl3Application(new GameStateManager(), config);
