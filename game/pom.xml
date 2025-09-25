@@ -38,6 +38,28 @@
             <classifier>natives-desktop</classifier>
         </dependency>
 
+        <!-- LibGDX UI - Para crear interfaces de usuario -->
+        <dependency>
+            <groupId>com.badlogicgames.gdx</groupId>
+            <artifactId>gdx-tools</artifactId>
+            <version>${libgdx.version}</version>
+        </dependency>
+
+        <!-- LibGDX FreeType - Para generar fuentes de alta calidad -->
+        <dependency>
+            <groupId>com.badlogicgames.gdx</groupId>
+            <artifactId>gdx-freetype</artifactId>
+            <version>${libgdx.version}</version>
+        </dependency>
+
+        <!-- LibGDX FreeType Platform Natives - Librerías nativas para FreeType -->
+        <dependency>
+            <groupId>com.badlogicgames.gdx</groupId>
+            <artifactId>gdx-freetype-platform</artifactId>
+            <version>${libgdx.version}</version>
+            <classifier>natives-desktop</classifier>
+        </dependency>
+
         <!-- JSON para guardar configuraciones y datos del juego -->
         <dependency>
             <groupId>com.google.code.gson</groupId>

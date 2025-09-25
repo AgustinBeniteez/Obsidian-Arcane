@@ -9,23 +9,23 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
  */
 public class Main {
     public static void main(String[] args) {
-        // Configuración de la ventana del juego
+        // Game window configuration
         Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
         
-        // Configuración básica de la ventana
-        config.setTitle("Obsidian Arcane - Roguelike Dungeon Crawler");
-        config.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode());  // Pantalla completa por defecto
+        // Basic window configuration
+        config.setTitle("Obsidian Arcane");
+        config.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode());  // Fullscreen by default
         config.setResizable(true);
         config.setMaximized(false);
         
-        // Configuración alternativa para modo ventana (comentada)
-        // config.setWindowedMode(1920, 1080);  // Resolución Full HD
+        // Alternative configuration for windowed mode (commented)
+        // config.setWindowedMode(1920, 1080);  // Full HD resolution
         
-        // Configuración de rendimiento
+        // Performance configuration
         config.setForegroundFPS(60);  // 60 FPS
-        config.setIdleFPS(30);        // 30 FPS cuando la ventana no está activa
+        config.setIdleFPS(30);        // 30 FPS when window is not active
         
-        // Crear y lanzar la aplicación
-        new Lwjgl3Application(new ObsidianArcaneGame(), config);
+        // Create and launch the application
+        new Lwjgl3Application(new GameStateManager(), config);
     }
 }

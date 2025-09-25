@@ -14,7 +14,7 @@ import com.badlogic.gdx.graphics.Color;
  */
 public class ObsidianArcaneGame extends ApplicationAdapter {
     
-    // Componentes básicos de renderizado
+    // Basic rendering components
     private SpriteBatch batch;
     private BitmapFont font;
     private OrthographicCamera camera;
@@ -29,7 +29,7 @@ public class ObsidianArcaneGame extends ApplicationAdapter {
         font = new BitmapFont();
         font.setColor(Color.WHITE);
         
-        // Configurar cámara
+        // Configure camera
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 1024, 768);
         
@@ -46,7 +46,7 @@ public class ObsidianArcaneGame extends ApplicationAdapter {
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         
-        // Actualizar cámara
+        // Update camera
         camera.update();
         batch.setProjectionMatrix(camera.combined);
         
@@ -61,7 +61,7 @@ public class ObsidianArcaneGame extends ApplicationAdapter {
         
         batch.end();
         
-        // Input básico para cerrar el juego
+        // Basic input to close the game
         if (Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.ESCAPE)) {
             Gdx.app.exit();
         }
