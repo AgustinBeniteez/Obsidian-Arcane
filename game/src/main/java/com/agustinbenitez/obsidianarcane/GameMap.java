@@ -3,185 +3,153 @@ package com.agustinbenitez.obsidianarcane;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
+import com.agustinbenitez.obsidianarcane.buildsGame.BuildItem;
+import com.agustinbenitez.obsidianarcane.buildsGame.Ayuntamiento;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 /**
- * Clase que maneja la representación, renderizado y lógica del mapa del juego.
- * Ahora maneja un sistema de salas conectadas con túneles en lugar de mapas continuos.
+ * Clase que maneja un mapa básico vacío para tower defense y gestión de aldea.
+ * Simplificado para permitir construcción libre sin generación procedural.
  */
 public class GameMap {
     
     // Constantes del mapa
     private static final float TILE_SIZE = 32.0f;
-    private static final int BASE_ROOM_WIDTH = 20;
-    private static final int BASE_ROOM_HEIGHT = 15;
-    private static final int GRID_WIDTH = 5;  // Número de salas horizontalmente
-    private static final int GRID_HEIGHT = 4; // Número de salas verticalmente
+    private static final int MAP_WIDTH = 50;  // Ancho del mapa en tiles
+    private static final int MAP_HEIGHT = 30; // Alto del mapa en tiles (reducido de 40 a 30)
     
-    // Tamaños posibles de salas (multiplicadores del tamaño base)
-    private static final int[] ROOM_SIZE_MULTIPLIERS = {1, 2, 4}; // x1, x2, x4
-    private static final float[] ROOM_SIZE_PROBABILITIES = {0.6f, 0.3f, 0.1f}; // 60%, 30%, 10%
-    
-    // Propiedades del mapa de salas
+    // Propiedades del mapa
     private int totalWidth;
     private int totalHeight;
-    private Room[][] roomGrid;
-    private List<Room> rooms;
-    private Random random;
-    private long seed;
-
+    private int[][] mapData; // 0 = vacío/construible, 1 = ocupado
+    
+    // Lista de construcciones en el mapa
+    private List<BuildItem> buildings;
+    
     public GameMap() {
-        this(System.currentTimeMillis()); // Usar timestamp como seed por defecto
-    }
-    
-    public GameMap(long seed) {
-        this.seed = seed;
-        this.totalWidth = GRID_WIDTH * BASE_ROOM_WIDTH * 4; // Máximo tamaño posible
-        this.totalHeight = GRID_HEIGHT * BASE_ROOM_HEIGHT * 4;
-        this.random = new Random(seed);
-        this.rooms = new ArrayList<>();
+        this.totalWidth = MAP_WIDTH;
+        this.totalHeight = MAP_HEIGHT;
         
-        // Generar el mapa de salas
-        generateRoomMap();
-    }
-    
-    /**
-     * Genera el mapa de salas conectadas con tamaños variables
-     */
-    private void generateRoomMap() {
-        // Inicializar la grilla de salas
-        roomGrid = new Room[GRID_WIDTH][GRID_HEIGHT];
-        rooms.clear();
+        // Inicializar lista de construcciones
+        this.buildings = new ArrayList<>();
         
-        int currentWorldX = 0;
+        // Inicializar mapa vacío
+        initializeEmptyMap();
         
-        // Crear todas las salas con tamaños variables
-        for (int x = 0; x < GRID_WIDTH; x++) {
-            int currentWorldY = 0;
-            int maxWidthInColumn = 0;
-            
-            for (int y = 0; y < GRID_HEIGHT; y++) {
-                // Seleccionar tamaño aleatorio basado en probabilidades
-                int sizeMultiplier = selectRoomSize();
-                int roomWidth = BASE_ROOM_WIDTH * sizeMultiplier;
-                int roomHeight = BASE_ROOM_HEIGHT * sizeMultiplier;
-                
-                // Crear sala con posición absoluta en el mundo
-                Room room = new Room(x, y, roomWidth, roomHeight, this);
-                room.setWorldPosition(currentWorldX, currentWorldY);
-                
-                roomGrid[x][y] = room;
-                rooms.add(room);
-                
-                currentWorldY += roomHeight;
-                maxWidthInColumn = Math.max(maxWidthInColumn, roomWidth);
-            }
-            
-            currentWorldX += maxWidthInColumn;
-        }
+        // Crear ayuntamiento en el centro del mapa
+        createTownHall();
         
-        // Conectar salas adyacentes aleatoriamente
-        connectRooms();
-        
-        System.out.println("Mapa de salas generado: " + rooms.size() + " salas creadas");
+        Gdx.app.log("GameMap", "Mapa vacío creado: " + MAP_WIDTH + "x" + MAP_HEIGHT + " tiles");
     }
     
     /**
-     * Selecciona un tamaño de sala basado en probabilidades
+     * Inicializa un mapa completamente vacío
      */
-    private int selectRoomSize() {
-        float randomValue = random.nextFloat();
-        float cumulativeProbability = 0.0f;
+    private void initializeEmptyMap() {
+        mapData = new int[MAP_WIDTH][MAP_HEIGHT];
         
-        for (int i = 0; i < ROOM_SIZE_MULTIPLIERS.length; i++) {
-            cumulativeProbability += ROOM_SIZE_PROBABILITIES[i];
-            if (randomValue <= cumulativeProbability) {
-                return ROOM_SIZE_MULTIPLIERS[i];
-            }
-        }
-        
-        return ROOM_SIZE_MULTIPLIERS[0]; // Fallback al tamaño más pequeño
-    }
-    
-    /**
-     * Conecta las salas entre sí creando túneles
-     */
-    private void connectRooms() {
-        // Primero, crear conexiones garantizadas para asegurar conectividad
-        ensureConnectivity();
-        
-        // Luego, agregar conexiones adicionales aleatorias
-        for (int x = 0; x < GRID_WIDTH; x++) {
-            for (int y = 0; y < GRID_HEIGHT; y++) {
-                Room currentRoom = roomGrid[x][y];
-                
-                // Solo procesar si la sala actual existe
-                if (currentRoom == null) continue;
-                
-                // Conectar con la sala de la derecha (probabilidad adicional)
-                if (x < GRID_WIDTH - 1 && random.nextFloat() > 0.6f) {
-                    Room rightRoom = roomGrid[x + 1][y];
-                    if (rightRoom != null && !currentRoom.hasConnection(Room.Direction.EAST)) {
-                        currentRoom.connectTo(rightRoom, Room.Direction.EAST);
-                    }
-                }
-                
-                // Conectar con la sala de arriba (probabilidad adicional)
-                if (y < GRID_HEIGHT - 1 && random.nextFloat() > 0.6f) {
-                    Room topRoom = roomGrid[x][y + 1];
-                    if (topRoom != null && !currentRoom.hasConnection(Room.Direction.NORTH)) {
-                        currentRoom.connectTo(topRoom, Room.Direction.NORTH);
-                    }
-                }
+        // Llenar todo con espacios vacíos (0)
+        for (int x = 0; x < MAP_WIDTH; x++) {
+            for (int y = 0; y < MAP_HEIGHT; y++) {
+                mapData[x][y] = 0; // Todo vacío y construible
             }
         }
     }
     
     /**
-     * Asegura que todas las salas estén conectadas creando un camino mínimo garantizado
+     * Crea el ayuntamiento en el centro del mapa
      */
-    private void ensureConnectivity() {
-        // Crear conexiones horizontales garantizadas (al menos una por fila)
-        for (int y = 0; y < GRID_HEIGHT; y++) {
-            for (int x = 0; x < GRID_WIDTH - 1; x++) {
-                Room currentRoom = roomGrid[x][y];
-                Room rightRoom = roomGrid[x + 1][y];
-                
-                // Solo conectar si ambas salas existen
-                if (currentRoom != null && rightRoom != null) {
-                    currentRoom.connectTo(rightRoom, Room.Direction.EAST);
+    private void createTownHall() {
+        // Calcular posición central del mapa
+        float centerX = (MAP_WIDTH / 2) * TILE_SIZE;
+        float centerY = (MAP_HEIGHT / 2) * TILE_SIZE;
+        
+        // Crear ayuntamiento
+        Ayuntamiento townHall = new Ayuntamiento(centerX, centerY);
+        
+        // Añadir a la lista de construcciones
+        buildings.add(townHall);
+        
+        // Marcar tiles como ocupados (el ayuntamiento ocupa 3x3 tiles)
+        int centerTileX = MAP_WIDTH / 2;
+        int centerTileY = MAP_HEIGHT / 2;
+        
+        for (int x = centerTileX - 1; x <= centerTileX + 1; x++) {
+            for (int y = centerTileY - 1; y <= centerTileY + 1; y++) {
+                if (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT) {
+                    mapData[x][y] = 1; // Marcar como ocupado
                 }
             }
         }
         
-        // Crear conexiones verticales garantizadas (al menos una por columna)
-        for (int x = 0; x < GRID_WIDTH; x++) {
-            for (int y = 0; y < GRID_HEIGHT - 1; y++) {
-                Room currentRoom = roomGrid[x][y];
-                Room topRoom = roomGrid[x][y + 1];
-                
-                // Solo conectar si ambas salas existen
-                if (currentRoom != null && topRoom != null) {
-                    currentRoom.connectTo(topRoom, Room.Direction.NORTH);
-                }
-            }
-        }
+        // Iniciar construcción automáticamente (ya construido)
+        townHall.completeBuild();
+        
+        Gdx.app.log("GameMap", "Ayuntamiento creado en el centro del mapa (" + centerX + ", " + centerY + ")");
     }
     
     /**
-     * Renderiza todo el mapa de salas
+     * Renderiza el mapa (solo un fondo básico)
      */
     public void render(ShapeRenderer shapeRenderer) {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         
-        for (Room room : rooms) {
-            room.render(shapeRenderer, TILE_SIZE);
+        // Dibujar fondo verde claro para representar terreno construible
+        shapeRenderer.setColor(0.6f, 0.8f, 0.4f, 1.0f); // Verde claro
+        shapeRenderer.rect(0, 0, totalWidth * TILE_SIZE, totalHeight * TILE_SIZE);
+        
+        // Dibujar grilla opcional para visualizar tiles
+        shapeRenderer.end();
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(0.5f, 0.7f, 0.3f, 0.3f); // Verde más oscuro, transparente
+        
+        // Líneas verticales
+        for (int x = 0; x <= MAP_WIDTH; x++) {
+            float worldX = x * TILE_SIZE;
+            shapeRenderer.line(worldX, 0, worldX, totalHeight * TILE_SIZE);
+        }
+        
+        // Líneas horizontales
+        for (int y = 0; y <= MAP_HEIGHT; y++) {
+            float worldY = y * TILE_SIZE;
+            shapeRenderer.line(0, worldY, totalWidth * TILE_SIZE, worldY);
         }
         
         shapeRenderer.end();
+        
+        // Renderizar construcciones
+        renderBuildings(shapeRenderer);
+    }
+    
+    /**
+     * Renderiza todas las construcciones del mapa
+     */
+    private void renderBuildings(ShapeRenderer shapeRenderer) {
+        // No necesitamos begin/end aquí ya que BuildItem maneja su propio estado
+        for (BuildItem building : buildings) {
+            building.render(shapeRenderer);
+        }
+    }
+    
+    /**
+     * Renderiza todas las construcciones del mapa con SpriteBatch (para sprites)
+     */
+    public void renderBuildings(SpriteBatch batch) {
+        for (BuildItem building : buildings) {
+            building.render(batch);
+        }
+    }
+    
+    /**
+     * Actualiza todas las construcciones del mapa
+     */
+    public void update(float deltaTime) {
+        for (BuildItem building : buildings) {
+            building.update(deltaTime);
+        }
     }
     
     /**
@@ -189,105 +157,63 @@ public class GameMap {
      */
     public void renderRegion(ShapeRenderer shapeRenderer, float cameraX, float cameraY, 
                            float viewWidth, float viewHeight) {
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        
-        // Renderizar todas las salas (simplificado para salas de tamaños variables)
-        for (Room room : rooms) {
-            if (room != null) {
-                room.render(shapeRenderer, TILE_SIZE);
-            }
-        }
-        
-        shapeRenderer.end();
+        // Para un mapa simple, renderizar todo
+        render(shapeRenderer);
     }
     
     /**
      * Verifica si hay colisión en las coordenadas del mundo especificadas
+     * En un mapa vacío, no hay colisiones por defecto
      */
     public boolean isCollision(float worldX, float worldY) {
         int tileX = (int)(worldX / TILE_SIZE);
         int tileY = (int)(worldY / TILE_SIZE);
         
-        // Encontrar la sala que contiene estas coordenadas
-        Room room = getRoomAt(tileX, tileY);
-        if (room == null) {
+        // Verificar límites del mapa
+        if (tileX < 0 || tileX >= MAP_WIDTH || tileY < 0 || tileY >= MAP_HEIGHT) {
             return true; // Fuera del mapa es sólido
         }
         
-        int localX = room.getLocalX(tileX);
-        int localY = room.getLocalY(tileY);
-        
-        return room.isSolid(localX, localY);
-    }
-    
-    /**
-     * Obtiene la sala que contiene las coordenadas de tile especificadas
-     */
-    private Room getRoomAt(int tileX, int tileY) {
-        // Buscar en todas las salas ya que ahora tienen tamaños variables
-        for (Room room : rooms) {
-            if (room != null && room.isInRoom(tileX, tileY)) {
-                return room;
-            }
-        }
-        
-        return null;
+        // En un mapa vacío, verificar si hay algo construido
+        return mapData[tileX][tileY] == 1;
     }
     
     /**
      * Encuentra una posición válida para generar el jugador
      */
     public Vector2 findValidSpawnPosition() {
-        // Buscar en la primera sala (esquina inferior izquierda)
-        Room spawnRoom = roomGrid[0][0];
+        // Posición central del mapa
+        float centerX = (MAP_WIDTH / 2) * TILE_SIZE + TILE_SIZE / 2;
+        float centerY = (MAP_HEIGHT / 2) * TILE_SIZE + TILE_SIZE / 2;
         
-        // Buscar una posición de suelo en el centro de la sala
-        for (int attempts = 0; attempts < 100; attempts++) {
-            int localX = random.nextInt(spawnRoom.getWidth() - 4) + 2;
-            int localY = random.nextInt(spawnRoom.getHeight() - 4) + 2;
-            
-            if (!spawnRoom.isSolid(localX, localY)) {
-                float worldX = (spawnRoom.getWorldX() + localX) * TILE_SIZE + TILE_SIZE / 2;
-                float worldY = (spawnRoom.getWorldY() + localY) * TILE_SIZE + TILE_SIZE / 2;
-                return new Vector2(worldX, worldY);
-            }
+        return new Vector2(centerX, centerY);
+    }
+    
+    /**
+     * Marca una posición como ocupada (para futuras construcciones)
+     */
+    public void setTileOccupied(int tileX, int tileY, boolean occupied) {
+        if (tileX >= 0 && tileX < MAP_WIDTH && tileY >= 0 && tileY < MAP_HEIGHT) {
+            mapData[tileX][tileY] = occupied ? 1 : 0;
         }
-        
-        // Posición por defecto si no se encuentra una válida
-        return new Vector2(TILE_SIZE * 3, TILE_SIZE * 3);
     }
     
     /**
-     * Regenera todo el mapa usando la misma seed
+     * Verifica si una posición está ocupada
      */
-    public void regenerateMap() {
-        this.random = new Random(seed); // Reinicializar con la misma seed
-        generateRoomMap();
-        System.out.println("Mapa regenerado con seed: " + seed);
-    }
-    
-    /**
-     * Regenera el mapa con una nueva seed
-     */
-    public void regenerateMapWithNewSeed(long newSeed) {
-        this.seed = newSeed;
-        this.random = new Random(seed);
-        generateRoomMap();
-        System.out.println("Mapa regenerado con nueva seed: " + seed);
-    }
-    
-    public long getSeed() {
-        return seed;
+    public boolean isTileOccupied(int tileX, int tileY) {
+        if (tileX < 0 || tileX >= MAP_WIDTH || tileY < 0 || tileY >= MAP_HEIGHT) {
+            return true; // Fuera del mapa se considera ocupado
+        }
+        return mapData[tileX][tileY] == 1;
     }
     
     // Métodos de utilidad y getters
     public int getTotalWidth() { return totalWidth; }
     public int getTotalHeight() { return totalHeight; }
     public float getTileSize() { return TILE_SIZE; }
-    public int getGridWidth() { return GRID_WIDTH; }
-    public int getGridHeight() { return GRID_HEIGHT; }
-    public int getBaseRoomWidth() { return BASE_ROOM_WIDTH; }
-    public int getBaseRoomHeight() { return BASE_ROOM_HEIGHT; }
+    public int getMapWidth() { return MAP_WIDTH; }
+    public int getMapHeight() { return MAP_HEIGHT; }
     
     /**
      * Convierte coordenadas del mundo a coordenadas de tile
@@ -315,41 +241,91 @@ public class GameMap {
      * Imprime información del mapa en la consola (para debug)
      */
     public void printMapToConsole() {
-        System.out.println("=== MAPA DE SALAS ===");
-        System.out.println("Grilla: " + GRID_WIDTH + "x" + GRID_HEIGHT + " salas");
-        System.out.println("Tamaño base de sala: " + BASE_ROOM_WIDTH + "x" + BASE_ROOM_HEIGHT + " tiles");
-        System.out.println("Tamaño total: " + totalWidth + "x" + totalHeight + " tiles");
-        System.out.println("Salas creadas: " + rooms.size());
-        
-        // Mostrar conexiones
-        System.out.println("\nConexiones entre salas:");
-        for (int y = GRID_HEIGHT - 1; y >= 0; y--) {
-            for (int x = 0; x < GRID_WIDTH; x++) {
-                Room room = roomGrid[x][y];
-                System.out.print("[" + x + "," + y + "]");
-                if (room.hasConnection(Room.Direction.EAST)) System.out.print("-E");
-                if (room.hasConnection(Room.Direction.NORTH)) System.out.print("-N");
-                System.out.print(" ");
-            }
-            System.out.println();
-        }
+        System.out.println("=== MAPA VACÍO PARA TOWER DEFENSE ===");
+        System.out.println("Tamaño: " + MAP_WIDTH + "x" + MAP_HEIGHT + " tiles");
+        System.out.println("Tamaño del tile: " + TILE_SIZE + " píxeles");
+        System.out.println("Tamaño total: " + (MAP_WIDTH * TILE_SIZE) + "x" + (MAP_HEIGHT * TILE_SIZE) + " píxeles");
+        System.out.println("Tipo: Mapa vacío construible");
     }
     
     /**
      * Libera recursos
      */
     public void dispose() {
-        // No hay recursos específicos que liberar en esta implementación
+        // Liberar recursos de las construcciones
+        for (BuildItem building : buildings) {
+            building.dispose();
+        }
+        buildings.clear();
+        
         System.out.println("GameMap disposed");
     }
     
+    // Métodos para gestionar construcciones
+    
     /**
-     * Verifica si existe una sala en la posición especificada de la grilla
+     * Añade una construcción al mapa
      */
-    public boolean hasRoomAt(int gridX, int gridY) {
-        if (gridX < 0 || gridX >= GRID_WIDTH || gridY < 0 || gridY >= GRID_HEIGHT) {
-            return false;
+    public boolean addBuilding(BuildItem building) {
+        if (building != null) {
+            buildings.add(building);
+            
+            // Marcar tiles como ocupados
+            int tileX = worldToTileX(building.getX());
+            int tileY = worldToTileY(building.getY());
+            int tilesWidth = (int) Math.ceil(building.getWidth() / TILE_SIZE);
+            int tilesHeight = (int) Math.ceil(building.getHeight() / TILE_SIZE);
+            
+            for (int x = tileX; x < tileX + tilesWidth; x++) {
+                for (int y = tileY; y < tileY + tilesHeight; y++) {
+                    setTileOccupied(x, y, true);
+                }
+            }
+            
+            return true;
         }
-        return roomGrid[gridX][gridY] != null;
+        return false;
+    }
+    
+    /**
+     * Remueve una construcción del mapa
+     */
+    public boolean removeBuilding(BuildItem building) {
+        if (buildings.remove(building)) {
+            // Liberar tiles ocupados
+            int tileX = worldToTileX(building.getX());
+            int tileY = worldToTileY(building.getY());
+            int tilesWidth = (int) Math.ceil(building.getWidth() / TILE_SIZE);
+            int tilesHeight = (int) Math.ceil(building.getHeight() / TILE_SIZE);
+            
+            for (int x = tileX; x < tileX + tilesWidth; x++) {
+                for (int y = tileY; y < tileY + tilesHeight; y++) {
+                    setTileOccupied(x, y, false);
+                }
+            }
+            
+            building.dispose();
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Obtiene todas las construcciones del mapa
+     */
+    public List<BuildItem> getBuildings() {
+        return new ArrayList<>(buildings);
+    }
+    
+    /**
+     * Obtiene el ayuntamiento (si existe)
+     */
+    public Ayuntamiento getTownHall() {
+        for (BuildItem building : buildings) {
+            if (building instanceof Ayuntamiento) {
+                return (Ayuntamiento) building;
+            }
+        }
+        return null;
     }
 }

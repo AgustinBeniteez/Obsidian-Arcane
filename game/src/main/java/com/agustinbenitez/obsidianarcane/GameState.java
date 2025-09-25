@@ -13,7 +13,7 @@ public class GameState implements Serializable {
     // Información de la partida
     private String saveName;
     private Date saveDate;
-    private long mapSeed;
+    private String villageName;
     
     // Estado del jugador
     private float playerX;
@@ -36,10 +36,10 @@ public class GameState implements Serializable {
         this.playTime = 0f;
     }
     
-    public GameState(String saveName, long mapSeed, Vector2 playerPosition) {
+    public GameState(String saveName, String villageName, Vector2 playerPosition) {
         this();
         this.saveName = saveName;
-        this.mapSeed = mapSeed;
+        this.villageName = villageName;
         this.playerX = playerPosition.x;
         this.playerY = playerPosition.y;
     }
@@ -51,8 +51,8 @@ public class GameState implements Serializable {
     public Date getSaveDate() { return saveDate; }
     public void setSaveDate(Date saveDate) { this.saveDate = saveDate; }
     
-    public long getMapSeed() { return mapSeed; }
-    public void setMapSeed(long mapSeed) { this.mapSeed = mapSeed; }
+    public String getVillageName() { return villageName; }
+    public void setVillageName(String villageName) { this.villageName = villageName; }
     
     public float getPlayerX() { return playerX; }
     public void setPlayerX(float playerX) { this.playerX = playerX; }
@@ -97,7 +97,7 @@ public class GameState implements Serializable {
         GameState copy = new GameState();
         copy.saveName = this.saveName;
         copy.saveDate = new Date(this.saveDate.getTime());
-        copy.mapSeed = this.mapSeed;
+        copy.villageName = this.villageName;
         copy.playerX = this.playerX;
         copy.playerY = this.playerY;
         copy.playerLevel = this.playerLevel;
@@ -110,7 +110,7 @@ public class GameState implements Serializable {
     
     @Override
     public String toString() {
-        return String.format("GameState{name='%s', seed=%d, pos=(%.1f,%.1f), level=%d, time=%.1fs}", 
-                saveName, mapSeed, playerX, playerY, playerLevel, playTime);
+        return String.format("GameState{name='%s', village='%s', pos=(%.1f,%.1f), level=%d, time=%.1fs}", 
+                saveName, villageName, playerX, playerY, playerLevel, playTime);
     }
 }

@@ -141,18 +141,11 @@ public class SaveLoadScreen implements Screen {
     
     private void performLoad() {
         if (!saveManager.hasSave(selectedSlot)) {
-            // Si no hay partida guardada, crear una nueva
+            // Si no hay partida guardada, mostrar pantalla de entrada de nombre de aldea
             Gdx.app.log("SaveLoadScreen", "Creando nueva partida en slot " + selectedSlot);
             
-            // Crear nueva partida con seed aleatoria
-            long seed = System.currentTimeMillis();
-            GameState newGameState = new GameState("Partida " + selectedSlot, seed, new Vector2(96, 96));
-            
-            // Guardar la nueva partida en el slot seleccionado
-            saveManager.saveGame(selectedSlot, newGameState);
-            
-            // Cargar la nueva partida
-            game.loadGame(newGameState);
+            // Ir a la pantalla de entrada de nombre de aldea con el slot seleccionado
+            game.showVillageNameInput(selectedSlot);
             return;
         }
         
@@ -277,7 +270,7 @@ public class SaveLoadScreen implements Screen {
                 
                 font.draw(batch, localization.getText("save.slot") + " " + slot + ": " + saveName, slotX + 10, slotY + SLOT_HEIGHT - 15);
                 font.draw(batch, saveDate + " | " + playTime + " | " + level, slotX + 10, slotY + SLOT_HEIGHT - 35);
-                font.draw(batch, localization.getText("save.seed") + ": " + save.getMapSeed(), slotX + 10, slotY + SLOT_HEIGHT - 55);
+                font.draw(batch, localization.getText("save.village") + ": " + save.getVillageName(), slotX + 10, slotY + SLOT_HEIGHT - 55);
             } else {
                 // Slot vacío
                 font.draw(batch, localization.getText("save.slot") + " " + slot + ": " + localization.getText("save.empty"), slotX + 10, slotY + SLOT_HEIGHT - 30);
