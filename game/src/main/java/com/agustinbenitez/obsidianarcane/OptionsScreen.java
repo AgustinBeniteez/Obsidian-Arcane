@@ -6,8 +6,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
@@ -16,26 +14,27 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.graphics.Color;
 
 /**
- * Main Menu Screen for Obsidian Arcane
+ * Options Screen for Obsidian Arcane
+ * Allows players to change game settings including language
  */
-public class MainMenuScreen implements Screen {
+public class OptionsScreen implements Screen {
     
     private GameStateManager game;
     private Stage stage;
     private SpriteBatch batch;
-    private BitmapFont buttonFont;
+    private BitmapFont font;
     private OrthographicCamera camera;
-    private Texture titleLogo;
     private LocalizationManager localization;
 
     // UI Elements
     private Table mainTable;
-    private Image titleImage;
-    private TextButton playButton;
-    private TextButton optionsButton;
-    private TextButton exitButton;
+    private Label titleLabel;
+    private Label languageLabel;
+    private TextButton spanishButton;
+    private TextButton englishButton;
+    private TextButton backButton;
     
-    public MainMenuScreen(GameStateManager game) {
+    public OptionsScreen(GameStateManager game) {
         this.game = game;
         
         // Initialize localization
@@ -53,80 +52,99 @@ public class MainMenuScreen implements Screen {
     }
     
     private void createUI() {
-        // Load title image
-        titleLogo = new Texture(Gdx.files.internal("title_logo.png"));
-        
-        // Create sharper button font
-        buttonFont = new BitmapFont();
-        buttonFont.getData().setScale(1.8f);
-        buttonFont.setColor(Color.WHITE);
-        buttonFont.setUseIntegerPositions(false);
-        buttonFont.getRegion().getTexture().setFilter(
+        // Create font
+        font = new BitmapFont();
+        font.getData().setScale(1.5f);
+        font.setColor(Color.WHITE);
+        font.setUseIntegerPositions(false);
+        font.getRegion().getTexture().setFilter(
             com.badlogic.gdx.graphics.Texture.TextureFilter.Linear, 
             com.badlogic.gdx.graphics.Texture.TextureFilter.Linear
         );
         
-        // Create button styles
+        // Create styles
         Skin skin = new Skin();
-        skin.add("default-font", buttonFont);
+        skin.add("default-font", font);
+        
+        // Label style
+        Label.LabelStyle labelStyle = new Label.LabelStyle();
+        labelStyle.font = font;
+        labelStyle.fontColor = Color.WHITE;
         
         // Button style
         TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
-        buttonStyle.font = buttonFont;
+        buttonStyle.font = font;
         buttonStyle.fontColor = Color.WHITE;
         buttonStyle.overFontColor = Color.YELLOW;
         buttonStyle.downFontColor = Color.GRAY;
         
+        skin.add("default", labelStyle);
         skin.add("default", buttonStyle);
         
         // Create UI elements
-        titleImage = new Image(titleLogo);
+        titleLabel = new Label(localization.getText("options.title"), labelStyle);
+        languageLabel = new Label(localization.getText("options.language") + ":", labelStyle);
         
-        playButton = new TextButton(localization.getText("menu.play"), buttonStyle);
-        playButton.getLabel().setAlignment(com.badlogic.gdx.utils.Align.left);
-        
-        optionsButton = new TextButton(localization.getText("menu.options"), buttonStyle);
-        optionsButton.getLabel().setAlignment(com.badlogic.gdx.utils.Align.left);
-        
-        exitButton = new TextButton(localization.getText("menu.exit"), buttonStyle);
-        exitButton.getLabel().setAlignment(com.badlogic.gdx.utils.Align.left);
+        spanishButton = new TextButton(localization.getText("options.spanish"), buttonStyle);
+        englishButton = new TextButton(localization.getText("options.english"), buttonStyle);
+        backButton = new TextButton(localization.getText("options.back"), buttonStyle);
         
         // Configure button listeners
-        playButton.addListener(new ClickListener() {
+        spanishButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.startGame();
+                localization.setLanguage(LocalizationManager.Language.SPANISH);
+                refreshUI();
+                Gdx.app.log("OptionsScreen", "Idioma cambiado a Español");
             }
         });
         
-        optionsButton.addListener(new ClickListener() {
+        englishButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.showOptions();
+                localization.setLanguage(LocalizationManager.Language.ENGLISH);
+                refreshUI();
+                Gdx.app.log("OptionsScreen", "Language changed to English");
             }
         });
         
-        exitButton.addListener(new ClickListener() {
+        backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                Gdx.app.exit();
+                game.showMainMenu();
             }
         });
         
         // Create main table to organize elements
         mainTable = new Table();
         mainTable.setFillParent(true);
-        mainTable.left(); // Align to the left
-        mainTable.padLeft(100); // Add padding from the left
+        mainTable.center();
         
         // Add elements to the table
-        mainTable.add(titleImage).width(800).padBottom(50).left().row();
-        mainTable.add(playButton).width(300).height(60).padBottom(20).left().padLeft(10).row();
-        mainTable.add(optionsButton).width(300).height(60).padBottom(20).left().padLeft(10).row();
-        mainTable.add(exitButton).width(300).height(60).left().padLeft(10).row();
+        mainTable.add(titleLabel).padBottom(50).row();
+        mainTable.add(languageLabel).padBottom(20).row();
+        
+        // Language buttons in a horizontal table
+        Table languageTable = new Table();
+        languageTable.add(spanishButton).width(200).height(60).padRight(20);
+        languageTable.add(englishButton).width(200).height(60);
+        
+        mainTable.add(languageTable).padBottom(50).row();
+        mainTable.add(backButton).width(200).height(60);
         
         // Add table to stage
         stage.addActor(mainTable);
+    }
+    
+    /**
+     * Refresh UI text after language change
+     */
+    private void refreshUI() {
+        titleLabel.setText(localization.getText("options.title"));
+        languageLabel.setText(localization.getText("options.language") + ":");
+        spanishButton.setText(localization.getText("options.spanish"));
+        englishButton.setText(localization.getText("options.english"));
+        backButton.setText(localization.getText("options.back"));
     }
     
     @Override
@@ -136,11 +154,11 @@ public class MainMenuScreen implements Screen {
     
     @Override
     public void render(float delta) {
-        // Limpiar pantalla con color oscuro
+        // Clear screen with dark color
         Gdx.gl.glClearColor(0.05f, 0.05f, 0.15f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         
-        // Actualizar y renderizar stage
+        // Update and render stage
         stage.act(delta);
         stage.draw();
     }
@@ -163,7 +181,6 @@ public class MainMenuScreen implements Screen {
     public void dispose() {
         stage.dispose();
         batch.dispose();
-        titleLogo.dispose();
-        buttonFont.dispose();
+        font.dispose();
     }
 }

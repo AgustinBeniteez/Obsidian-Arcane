@@ -18,12 +18,16 @@ public class GameplayScreen implements Screen {
     private SpriteBatch batch;
     private BitmapFont font;
     private OrthographicCamera camera;
+    private LocalizationManager localization;
     
     // Game variables
     private float deltaTime;
     
     public GameplayScreen(GameStateManager game) {
         this.game = game;
+        
+        // Initialize localization
+        this.localization = LocalizationManager.getInstance();
         
         // Initialize components
         batch = new SpriteBatch();
@@ -36,7 +40,7 @@ public class GameplayScreen implements Screen {
     
     @Override
     public void show() {
-        Gdx.app.log("GameplayScreen", "Starting Obsidian Arcane gameplay");
+        Gdx.app.log("GameplayScreen", localization.getText("game.starting"));
     }
     
     @Override
@@ -55,13 +59,13 @@ public class GameplayScreen implements Screen {
         batch.begin();
         
         // Temporary development text
-        font.draw(batch, "OBSIDIAN ARCANE - GAMEPLAY", 
+        font.draw(batch, localization.getText("game.title"), 
                  Gdx.graphics.getWidth() / 2 - 150, Gdx.graphics.getHeight() / 2 + 50);
-        font.draw(batch, "Here the roguelike will be developed", 
+        font.draw(batch, localization.getText("game.subtitle"), 
                  Gdx.graphics.getWidth() / 2 - 120, Gdx.graphics.getHeight() / 2);
-        font.draw(batch, "Press M to return to menu", 
+        font.draw(batch, localization.getText("game.return_menu"), 
                  Gdx.graphics.getWidth() / 2 - 100, Gdx.graphics.getHeight() / 2 - 50);
-        font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 20, 
+        font.draw(batch, localization.getText("game.fps", Gdx.graphics.getFramesPerSecond()), 20, 
                  Gdx.graphics.getHeight() - 20);
         
         batch.end();
