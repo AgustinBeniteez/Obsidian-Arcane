@@ -33,6 +33,15 @@ public class GameConfig {
         new Resolution(3840, 2160, "4K (3840x2160)")
     };
     
+    // Opciones de FPS predefinidas
+    public static final FPSOption[] AVAILABLE_FPS_OPTIONS = {
+        new FPSOption(30, "30 FPS"),
+        new FPSOption(60, "60 FPS"),
+        new FPSOption(120, "120 FPS"),
+        new FPSOption(144, "144 FPS"),
+        new FPSOption(0, "Ilimitado")
+    };
+    
     private GameConfig() {
         loadConfig();
     }
@@ -116,8 +125,8 @@ public class GameConfig {
      * Aplica la configuración actual al juego
      */
     public void applyConfig() {
-        if (Gdx.app == null) {
-            System.out.println("GameConfig: LibGDX no está inicializado, configuración aplicada al inicio");
+        if (Gdx.graphics == null) {
+            Gdx.app.log("GameConfig", "Graphics no disponible, configuración aplicada al inicializar");
             return;
         }
         
@@ -137,6 +146,16 @@ public class GameConfig {
             
             // Aplicar VSync
             graphics.setVSync(vsync);
+            
+            // Aplicar configuración de FPS
+            if (targetFPS > 0) {
+                graphics.setForegroundFPS(targetFPS);
+                Gdx.app.log("GameConfig", "FPS limitado a: " + targetFPS);
+            } else {
+                // FPS ilimitado - usar un valor muy alto
+                graphics.setForegroundFPS(0);
+                Gdx.app.log("GameConfig", "FPS ilimitado activado");
+            }
             
         } catch (Exception e) {
             Gdx.app.error("GameConfig", "Error al aplicar configuración: " + e.getMessage());
@@ -212,7 +231,28 @@ public class GameConfig {
     
     public void setTargetFPS(int targetFPS) {
         this.targetFPS = targetFPS;
+        applyConfig();
         saveConfig();
+    }
+    
+    /**
+     * Get current FPS option
+     */
+    public FPSOption getCurrentFPSOption() {
+        for (FPSOption option : AVAILABLE_FPS_OPTIONS) {
+            if (option.fps == targetFPS) {
+                return option;
+            }
+        }
+        // Default to 60 FPS if not found
+        return AVAILABLE_FPS_OPTIONS[1];
+    }
+    
+    /**
+     * Set FPS option
+     */
+    public void setFPSOption(FPSOption fpsOption) {
+        setTargetFPS(fpsOption.fps);
     }
     
     /**
@@ -240,6 +280,32 @@ public class GameConfig {
             if (obj == null || getClass() != obj.getClass()) return false;
             Resolution that = (Resolution) obj;
             return width == that.width && height == that.height;
+        }
+    }
+    
+    /**
+     * Clase interna para representar opciones de FPS
+     */
+    public static class FPSOption {
+        public final int fps;
+        public final String displayName;
+        
+        public FPSOption(int fps, String displayName) {
+            this.fps = fps;
+            this.displayName = displayName;
+        }
+        
+        @Override
+        public String toString() {
+            return displayName;
+        }
+        
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null || getClass() != obj.getClass()) return false;
+            FPSOption that = (FPSOption) obj;
+            return fps == that.fps;
         }
     }
 }

@@ -3,5 +3,5 @@
   "windowHeight": 1080,
   "fullscreen": true,
   "vsync": true,
-  "targetFPS": 60
+  "targetFPS": 144
 }

@@ -38,6 +38,8 @@ public class OptionsScreen implements Screen {
     private Label displayLabel;
     private Label resolutionLabel;
     private SelectBox<GameConfig.Resolution> resolutionSelectBox;
+    private Label fpsLabel;
+    private SelectBox<GameConfig.FPSOption> fpsSelectBox;
     private CheckBox fullscreenCheckBox;
     private TextButton applyButton;
     private TextButton backButton;
@@ -175,6 +177,14 @@ public class OptionsScreen implements Screen {
         resolutionSelectBox.setItems(GameConfig.AVAILABLE_RESOLUTIONS);
         resolutionSelectBox.setSelected(gameConfig.getCurrentResolution());
         
+        // FPS section
+        fpsLabel = new Label(localization.getText("options.fps") + ":", labelStyle);
+        
+        // FPS SelectBox
+        fpsSelectBox = new SelectBox<>(selectBoxStyle);
+        fpsSelectBox.setItems(GameConfig.AVAILABLE_FPS_OPTIONS);
+        fpsSelectBox.setSelected(gameConfig.getCurrentFPSOption());
+        
         // Fullscreen CheckBox
         fullscreenCheckBox = new CheckBox(" " + localization.getText("options.fullscreen"), checkBoxStyle);
         fullscreenCheckBox.setChecked(gameConfig.isFullscreen());
@@ -238,6 +248,10 @@ public class OptionsScreen implements Screen {
         mainTable.add(resolutionLabel).padRight(20);
         mainTable.add(resolutionSelectBox).width(300).height(50).padBottom(10).row();
         
+        // FPS
+        mainTable.add(fpsLabel).padRight(20);
+        mainTable.add(fpsSelectBox).width(300).height(50).padBottom(10).row();
+        
         // Fullscreen CheckBox with better layout and size
         fullscreenCheckBox = new CheckBox(" " + localization.getText("options.fullscreen"), checkBoxStyle);
         fullscreenCheckBox.setChecked(gameConfig.isFullscreen());
@@ -262,11 +276,16 @@ public class OptionsScreen implements Screen {
             GameConfig.Resolution selectedResolution = resolutionSelectBox.getSelected();
             gameConfig.setResolution(selectedResolution);
             
+            // Apply FPS setting
+            GameConfig.FPSOption selectedFPS = fpsSelectBox.getSelected();
+            gameConfig.setFPSOption(selectedFPS);
+            
             // Apply fullscreen setting
             gameConfig.setFullscreen(fullscreenCheckBox.isChecked());
             
             Gdx.app.log("OptionsScreen", "Configuración aplicada: " + 
-                selectedResolution.displayName + ", Pantalla completa: " + fullscreenCheckBox.isChecked());
+                selectedResolution.displayName + ", FPS: " + selectedFPS.displayName + 
+                ", Pantalla completa: " + fullscreenCheckBox.isChecked());
                 
         } catch (Exception e) {
             Gdx.app.error("OptionsScreen", "Error al aplicar configuración: " + e.getMessage());
@@ -283,6 +302,7 @@ public class OptionsScreen implements Screen {
         englishButton.setText(localization.getText("options.english"));
         displayLabel.setText(localization.getText("options.display") + ":");
         resolutionLabel.setText(localization.getText("options.resolution") + ":");
+        fpsLabel.setText(localization.getText("options.fps") + ":");
         // Update checkbox text directly
         fullscreenCheckBox.setText(" " + localization.getText("options.fullscreen"));
         applyButton.setText(localization.getText("options.apply"));

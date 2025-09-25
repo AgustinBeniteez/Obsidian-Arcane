@@ -8,6 +8,7 @@ com\agustinbenitez\obsidianarcane\MainMenuScreen$1.class
 com\agustinbenitez\obsidianarcane\GameStateManager.class
 com\agustinbenitez\obsidianarcane\OptionsScreen$2.class
 com\agustinbenitez\obsidianarcane\GameplayScreen.class
+com\agustinbenitez\obsidianarcane\GameConfig$FPSOption.class
 com\agustinbenitez\obsidianarcane\Main.class
 com\agustinbenitez\obsidianarcane\GameConfig.class
 com\agustinbenitez\obsidianarcane\OptionsScreen$3.class
