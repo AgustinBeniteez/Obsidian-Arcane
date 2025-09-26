@@ -1,10 +1,14 @@
+com\agustinbenitez\obsidianarcane\game\Player.class
+com\agustinbenitez\obsidianarcane\game\Tile$TileType.class
 com\agustinbenitez\obsidianarcane\menu\MainMenuScreen$3.class
 com\agustinbenitez\obsidianarcane\GameStateManager.class
 com\agustinbenitez\obsidianarcane\menu\CreditsScreen.class
 com\agustinbenitez\obsidianarcane\GameState.class
 com\agustinbenitez\obsidianarcane\menu\MainMenuScreen.class
+com\agustinbenitez\obsidianarcane\game\GameMap.class
 com\agustinbenitez\obsidianarcane\menu\OptionsScreen$1.class
 com\agustinbenitez\obsidianarcane\menu\OptionsScreen$3.class
+com\agustinbenitez\obsidianarcane\game\Tile.class
 com\agustinbenitez\obsidianarcane\SaveManager.class
 com\agustinbenitez\obsidianarcane\menu\MainMenuScreen$4.class
 com\agustinbenitez\obsidianarcane\menu\OptionsScreen$4.class
@@ -21,4 +25,5 @@ com\agustinbenitez\obsidianarcane\Main.class
 com\agustinbenitez\obsidianarcane\SimpleGameScreen.class
 com\agustinbenitez\obsidianarcane\GameConfig.class
 com\agustinbenitez\obsidianarcane\LocalizationManager.class
+com\agustinbenitez\obsidianarcane\game\MapEditor.class
 com\agustinbenitez\obsidianarcane\GameConfig$Resolution.class
