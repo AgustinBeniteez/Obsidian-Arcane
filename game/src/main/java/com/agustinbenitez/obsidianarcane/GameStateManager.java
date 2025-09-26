@@ -9,8 +9,8 @@ import com.badlogic.gdx.math.Vector2;
 import com.agustinbenitez.obsidianarcane.menu.MainMenuScreen;
 import com.agustinbenitez.obsidianarcane.menu.OptionsScreen;
 import com.agustinbenitez.obsidianarcane.menu.PauseMenuScreen;
+import com.agustinbenitez.obsidianarcane.SimpleGameScreen;
 import com.agustinbenitez.obsidianarcane.menu.CreditsScreen;
-import com.agustinbenitez.obsidianarcane.game.GameplayScreen;
 
 /**
  * Gestor de estados del juego (Menú Principal, Gameplay, Pausa, etc.)
@@ -19,12 +19,11 @@ public class GameStateManager extends Game {
     
     // Referencias a las diferentes pantallas
     private MainMenuScreen mainMenuScreen;
-    private GameplayScreen gameplayScreen;
+    private SimpleGameScreen simpleGameScreen;
     private OptionsScreen optionsScreen;
     private SaveLoadScreen saveLoadScreen;
     private PauseMenuScreen pauseMenuScreen;
     private CreditsScreen creditsScreen;
-    private VillageNameInputScreen villageNameInputScreen;
     
     // Estado actual del juego
     private GameState currentGameState;
@@ -33,7 +32,7 @@ public class GameStateManager extends Game {
     public void create() {
         // Inicializar pantallas
         mainMenuScreen = new MainMenuScreen(this);
-        gameplayScreen = new GameplayScreen(this);
+        simpleGameScreen = new SimpleGameScreen(this);
         optionsScreen = new OptionsScreen(this);
         
         // Start with the main menu
@@ -51,15 +50,14 @@ public class GameStateManager extends Game {
      * Cambiar al gameplay con una nueva partida
      */
     public void startGame() {
-        // Crear nuevo estado de juego (sin seed ya que el mapa es fijo)
-        currentGameState = new GameState("Nueva Partida", "Mi Aldea", new Vector2(800, 640)); // Posición central del mapa
+        // Crear nuevo estado de juego con valores por defecto
+        currentGameState = new GameState("Nueva Partida", "Mundo 2D", new Vector2(800, 640));
         
-        // Recrear GameplayScreen
-        if (gameplayScreen != null) {
-            gameplayScreen.dispose();
+        if (simpleGameScreen != null) {
+            simpleGameScreen.dispose();
         }
-        gameplayScreen = new GameplayScreen(this);
-        setScreen(gameplayScreen);
+        simpleGameScreen = new SimpleGameScreen(this);
+        setScreen(simpleGameScreen);
     }
     
     /**
@@ -68,26 +66,22 @@ public class GameStateManager extends Game {
     public void loadGame(GameState gameState) {
         this.currentGameState = gameState;
         
-        // Recrear GameplayScreen (sin seed ya que el mapa es fijo)
-        if (gameplayScreen != null) {
-            gameplayScreen.dispose();
+        // Recrear SimpleGameScreen
+        if (simpleGameScreen != null) {
+            simpleGameScreen.dispose();
         }
-        gameplayScreen = new GameplayScreen(this);
+        simpleGameScreen = new SimpleGameScreen(this);
         
-        // Establecer la posición de la cámara
-        gameplayScreen.setCameraPosition(gameState.getPlayerPosition());
-        
-        setScreen(gameplayScreen);
+        // Cambiar a la pantalla de juego
+        setScreen(simpleGameScreen);
     }
     
     /**
      * Reanudar el juego actual
      */
     public void resumeGame() {
-        if (gameplayScreen != null) {
-            setScreen(gameplayScreen);
-        } else {
-            showMainMenu();
+        if (simpleGameScreen != null) {
+            setScreen(simpleGameScreen);
         }
     }
     
@@ -95,10 +89,8 @@ public class GameStateManager extends Game {
      * Mostrar pantalla de guardado
      */
     public void showSaveScreen() {
-        if (currentGameState != null && gameplayScreen != null) {
-            // Actualizar estado actual con posición de la cámara
-            Vector2 cameraPos = gameplayScreen.getCameraPosition();
-            currentGameState.setPlayerPosition(cameraPos);
+        if (currentGameState != null && simpleGameScreen != null) {
+            // Actualizar estado actual (sin posición del jugador ya que no hay)
             
             saveLoadScreen = new SaveLoadScreen(this, true, currentGameState);
             setScreen(saveLoadScreen);
@@ -109,49 +101,30 @@ public class GameStateManager extends Game {
      * Mostrar pantalla de carga
      */
     public void showLoadScreen() {
-        saveLoadScreen = new SaveLoadScreen(this, false);
+        saveLoadScreen = new SaveLoadScreen(this, false, null);
         setScreen(saveLoadScreen);
     }
     
-    /**
-     * Mostrar pantalla de entrada de nombre de aldea
-     */
-    public void showVillageNameInput() {
-        showVillageNameInput(1); // Slot por defecto
-    }
+
     
     /**
-     * Mostrar pantalla de entrada de nombre de aldea para un slot específico
+     * Crear nuevo juego directamente en un slot específico sin pedir nombre
      */
-    public void showVillageNameInput(int slot) {
-        villageNameInputScreen = new VillageNameInputScreen(this, slot);
-        setScreen(villageNameInputScreen);
-    }
-    
-    /**
-     * Crear nuevo juego con el nombre de aldea especificado
-     */
-    public void startGameWithVillageName(String villageName) {
-        startGameWithVillageName(villageName, 1); // Slot por defecto
-    }
-    
-    /**
-     * Crear nuevo juego con el nombre de aldea especificado en un slot específico
-     */
-    public void startGameWithVillageName(String villageName, int slot) {
-        // Crear nuevo estado de juego con el nombre de aldea
-        currentGameState = new GameState("Partida " + slot, villageName, new Vector2(800, 640)); // Posición central del mapa
+    public void startNewGameInSlot(int slot) {
+        // Crear nuevo estado de juego con nombre automático
+        String saveName = "Partida " + slot;
+        currentGameState = new GameState(saveName, "Mundo 2D", new Vector2(800, 640)); // Posición central del mapa
         
         // Guardar la nueva partida en el slot especificado
         SaveManager saveManager = SaveManager.getInstance();
         saveManager.saveGame(slot, currentGameState);
         
-        // Recrear GameplayScreen
-        if (gameplayScreen != null) {
-            gameplayScreen.dispose();
+        // Recrear SimpleGameScreen
+        if (simpleGameScreen != null) {
+            simpleGameScreen.dispose();
         }
-        gameplayScreen = new GameplayScreen(this);
-        setScreen(gameplayScreen);
+        simpleGameScreen = new SimpleGameScreen(this);
+        setScreen(simpleGameScreen);
     }
     
     /**
@@ -175,10 +148,9 @@ public class GameStateManager extends Game {
      * Mostrar menú de pausa
      */
     public void showPauseMenu() {
-        if (pauseMenuScreen != null) {
-            pauseMenuScreen.dispose();
+        if (pauseMenuScreen == null) {
+            pauseMenuScreen = new PauseMenuScreen(this);
         }
-        pauseMenuScreen = new PauseMenuScreen(this);
         setScreen(pauseMenuScreen);
     }
     
@@ -199,14 +171,14 @@ public class GameStateManager extends Game {
     /**
      * Obtener la pantalla de gameplay actual
      */
-    public GameplayScreen getGameplayScreen() {
-        return gameplayScreen;
+    public SimpleGameScreen getSimpleGameScreen() {
+        return simpleGameScreen;
     }
     
     @Override
     public void dispose() {
         if (mainMenuScreen != null) mainMenuScreen.dispose();
-        if (gameplayScreen != null) gameplayScreen.dispose();
+        if (simpleGameScreen != null) simpleGameScreen.dispose();
         if (optionsScreen != null) optionsScreen.dispose();
         if (saveLoadScreen != null) saveLoadScreen.dispose();
         if (pauseMenuScreen != null) pauseMenuScreen.dispose();

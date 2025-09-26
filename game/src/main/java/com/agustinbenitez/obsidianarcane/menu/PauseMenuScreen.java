@@ -11,8 +11,8 @@ import com.badlogic.gdx.Input.Keys;
 import com.agustinbenitez.obsidianarcane.GameStateManager;
 import com.agustinbenitez.obsidianarcane.LocalizationManager;
 import com.agustinbenitez.obsidianarcane.SaveManager;
+import com.agustinbenitez.obsidianarcane.SimpleGameScreen;
 import com.agustinbenitez.obsidianarcane.GameState;
-import com.agustinbenitez.obsidianarcane.game.GameplayScreen;
 
 /**
  * Menú de pausa que aparece cuando el jugador presiona Escape durante el juego
@@ -151,9 +151,9 @@ public class PauseMenuScreen implements Screen {
                     GameState currentState = game.getCurrentGameState();
                     
                     // Actualizar el estado actual con la información del juego
-                    GameplayScreen gameplayScreen = game.getGameplayScreen();
-                    if (gameplayScreen != null) {
-                        currentState.setPlayerPosition(gameplayScreen.getCameraPosition());
+                    SimpleGameScreen simpleGameScreen = game.getSimpleGameScreen();
+                    if (simpleGameScreen != null) {
+                        // No hay posición del jugador que actualizar en SimpleGameScreen
                         currentState.updateSaveDate();
                     }
                     

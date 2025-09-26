@@ -141,11 +141,11 @@ public class SaveLoadScreen implements Screen {
     
     private void performLoad() {
         if (!saveManager.hasSave(selectedSlot)) {
-            // Si no hay partida guardada, mostrar pantalla de entrada de nombre de aldea
+            // Si no hay partida guardada, crear nueva partida directamente
             Gdx.app.log("SaveLoadScreen", "Creando nueva partida en slot " + selectedSlot);
             
-            // Ir a la pantalla de entrada de nombre de aldea con el slot seleccionado
-            game.showVillageNameInput(selectedSlot);
+            // Crear nueva partida directamente sin pedir nombre
+            game.startNewGameInSlot(selectedSlot);
             return;
         }
         
