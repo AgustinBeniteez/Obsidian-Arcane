@@ -62,8 +62,8 @@ public class Player {
         position.x += velocity.x * deltaTime;
         position.y += velocity.y * deltaTime;
         
-        // Update bounds
-        bounds.setPosition(position.x, position.y);
+        // Update bounds to match new position
+        updateBounds();
         
         // Reset ground state (will be set by collision detection)
         onGround = false;
@@ -109,24 +109,27 @@ public class Player {
      * Handle collision with walls
      */
     public void handleWallCollision(float wallX, boolean isLeftWall) {
-        if (isLeftWall && position.x <= wallX && velocity.x <= 0) {
+        if (isLeftWall && velocity.x < 0) {
+            // Player hitting left wall while moving left
             position.x = wallX;
             velocity.x = 0;
-        } else if (!isLeftWall && position.x + PLAYER_WIDTH >= wallX && velocity.x >= 0) {
+        } else if (!isLeftWall && velocity.x > 0) {
+            // Player hitting right wall while moving right
             position.x = wallX - PLAYER_WIDTH;
             velocity.x = 0;
         }
-        bounds.setPosition(position.x, position.y);
+        updateBounds();
     }
     
     /**
      * Handle collision with ceiling
      */
     public void handleCeilingCollision(float ceilingY) {
-        if (position.y + PLAYER_HEIGHT >= ceilingY && velocity.y >= 0) {
+        if (velocity.y > 0) {
+            // Player hitting ceiling while moving up
             position.y = ceilingY - PLAYER_HEIGHT;
             velocity.y = 0;
-            bounds.setPosition(position.x, position.y);
+            updateBounds();
         }
     }
     

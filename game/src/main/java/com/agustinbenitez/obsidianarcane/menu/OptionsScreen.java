@@ -1,336 +1,373 @@
 package com.agustinbenitez.obsidianarcane.menu;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.Color;
 import com.agustinbenitez.obsidianarcane.GameStateManager;
 import com.agustinbenitez.obsidianarcane.LocalizationManager;
 import com.agustinbenitez.obsidianarcane.GameConfig;
 
 /**
- * Options Screen for Obsidian Arcane
+ * Options Screen for Obsidian Arcane with keyboard navigation
  * Allows players to change game settings including language, resolution and display mode
  */
 public class OptionsScreen implements Screen {
     
+    public enum ScreenContext {
+        MAIN_MENU,
+        PAUSE_MENU
+    }
+    
+    private enum MenuOption {
+        SPANISH_BUTTON,
+        ENGLISH_BUTTON,
+        RESOLUTION_SELECT,
+        FPS_SELECT,
+        FULLSCREEN_TOGGLE,
+        APPLY_BUTTON,
+        BACK_BUTTON
+    }
+    
     private GameStateManager game;
-    private Stage stage;
     private SpriteBatch batch;
     private BitmapFont font;
+    private BitmapFont titleFont;
     private OrthographicCamera camera;
+    private ShapeRenderer shapeRenderer;
+    private GlyphLayout glyphLayout;
     private LocalizationManager localization;
     private GameConfig gameConfig;
-
-    // UI Elements
-    private Table mainTable;
-    private Label titleLabel;
-    private Label languageLabel;
-    private TextButton spanishButton;
-    private TextButton englishButton;
+    private ScreenContext context;
     
-    // Display settings
-    private Label displayLabel;
-    private Label resolutionLabel;
-    private SelectBox<GameConfig.Resolution> resolutionSelectBox;
-    private Label fpsLabel;
-    private SelectBox<GameConfig.FPSOption> fpsSelectBox;
-    private CheckBox fullscreenCheckBox;
-    private TextButton applyButton;
-    private TextButton backButton;
+    // Navigation
+    private MenuOption[] menuOptions;
+    private int selectedOptionIndex = 0;
+    
+    // Settings state
+    private int selectedResolutionIndex = 0;
+    private int selectedFPSIndex = 0;
+    private boolean fullscreenEnabled = false;
+    
+    // Visual constants
+    private static final Color BACKGROUND_COLOR = new Color(0.05f, 0.05f, 0.15f, 1);
+    private static final Color SELECTED_COLOR = new Color(1f, 0.8f, 0.2f, 1);
+    private static final Color NORMAL_COLOR = new Color(0.8f, 0.8f, 0.8f, 1);
+    private static final Color TITLE_COLOR = new Color(1f, 1f, 1f, 1);
+    private static final Color SECTION_COLOR = new Color(0.9f, 0.9f, 0.9f, 1);
     
     public OptionsScreen(GameStateManager game) {
+        this(game, ScreenContext.MAIN_MENU);
+    }
+    
+    public OptionsScreen(GameStateManager game, ScreenContext context) {
         this.game = game;
+        this.context = context;
         
         // Initialize localization and config
         this.localization = LocalizationManager.getInstance();
         this.gameConfig = GameConfig.getInstance();
         
-        // Initialize components
+        // Initialize graphics components
         batch = new SpriteBatch();
         camera = new OrthographicCamera();
-        stage = new Stage(new ScreenViewport(camera));
+        camera.setToOrtho(false, 800, 600);
+        shapeRenderer = new ShapeRenderer();
+        glyphLayout = new GlyphLayout();
         
-        // Configure input
-        Gdx.input.setInputProcessor(stage);
-        
-        createUI();
-    }
-    
-    private void createUI() {
-        // Create font
+        // Initialize fonts
         font = new BitmapFont();
-        font.getData().setScale(1.5f);
-        font.setColor(Color.WHITE);
-        font.setUseIntegerPositions(false);
-        font.getRegion().getTexture().setFilter(
-            com.badlogic.gdx.graphics.Texture.TextureFilter.Linear, 
-            com.badlogic.gdx.graphics.Texture.TextureFilter.Linear
-        );
+        font.getData().setScale(1.2f);
+        font.setColor(NORMAL_COLOR);
         
-        // Create styles
-        Skin skin = new Skin();
-        skin.add("default-font", font);
+        titleFont = new BitmapFont();
+        titleFont.getData().setScale(2.0f);
+        titleFont.setColor(TITLE_COLOR);
         
-        // Create a white pixel texture for UI backgrounds
-        com.badlogic.gdx.graphics.Pixmap pixmap = new com.badlogic.gdx.graphics.Pixmap(1, 1, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
-        pixmap.setColor(Color.WHITE);
-        pixmap.fill();
-        skin.add("white", new com.badlogic.gdx.graphics.Texture(pixmap));
-        pixmap.dispose();
+        // Initialize menu options
+        menuOptions = MenuOption.values();
         
-        // Create larger checkbox texture (32x32 pixels) - unchecked state
-        com.badlogic.gdx.graphics.Pixmap checkboxPixmap = new com.badlogic.gdx.graphics.Pixmap(32, 32, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
-        checkboxPixmap.setColor(Color.DARK_GRAY);
-        checkboxPixmap.fill();
-        // Draw border
-        checkboxPixmap.setColor(Color.WHITE);
-        checkboxPixmap.drawRectangle(0, 0, 32, 32);
-        checkboxPixmap.drawRectangle(1, 1, 30, 30);
-        skin.add("checkbox", new com.badlogic.gdx.graphics.Texture(checkboxPixmap));
-        checkboxPixmap.dispose();
-        
-        // Create checked checkbox texture with checkmark
-        com.badlogic.gdx.graphics.Pixmap checkboxCheckedPixmap = new com.badlogic.gdx.graphics.Pixmap(32, 32, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
-        checkboxCheckedPixmap.setColor(new Color(0.0f, 0.6f, 0.0f, 1.0f)); // Darker green
-        checkboxCheckedPixmap.fill();
-        // Draw border
-        checkboxCheckedPixmap.setColor(Color.WHITE);
-        checkboxCheckedPixmap.drawRectangle(0, 0, 32, 32);
-        checkboxCheckedPixmap.drawRectangle(1, 1, 30, 30);
-        // Draw checkmark (simple lines)
-        checkboxCheckedPixmap.setColor(Color.WHITE);
-        // Draw checkmark lines
-        for (int i = 0; i < 3; i++) {
-            checkboxCheckedPixmap.drawLine(8 + i, 16, 12 + i, 20);
-            checkboxCheckedPixmap.drawLine(12 + i, 20, 22 + i, 10);
-        }
-        skin.add("checkbox-checked", new com.badlogic.gdx.graphics.Texture(checkboxCheckedPixmap));
-        checkboxCheckedPixmap.dispose();
-        
-        // Label style
-        Label.LabelStyle labelStyle = new Label.LabelStyle();
-        labelStyle.font = font;
-        labelStyle.fontColor = Color.WHITE;
-        
-        // Button style
-        TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
-        buttonStyle.font = font;
-        buttonStyle.fontColor = Color.WHITE;
-        buttonStyle.overFontColor = Color.YELLOW;
-        buttonStyle.downFontColor = Color.GRAY;
-        
-        // SelectBox style
-        SelectBox.SelectBoxStyle selectBoxStyle = new SelectBox.SelectBoxStyle();
-        selectBoxStyle.font = font;
-        selectBoxStyle.fontColor = Color.WHITE;
-        selectBoxStyle.background = skin.newDrawable("white", Color.DARK_GRAY);
-        selectBoxStyle.backgroundOver = skin.newDrawable("white", Color.GRAY);
-        selectBoxStyle.backgroundOpen = skin.newDrawable("white", Color.LIGHT_GRAY);
-        
-        // List style for SelectBox
-        List.ListStyle listStyle = new List.ListStyle();
-        listStyle.font = font;
-        listStyle.fontColorSelected = Color.BLACK;
-        listStyle.fontColorUnselected = Color.WHITE;
-        listStyle.background = skin.newDrawable("white", Color.DARK_GRAY);
-        listStyle.selection = skin.newDrawable("white", Color.YELLOW);
-        selectBoxStyle.listStyle = listStyle;
-        
-        // ScrollPane style for SelectBox
-        ScrollPane.ScrollPaneStyle scrollPaneStyle = new ScrollPane.ScrollPaneStyle();
-        selectBoxStyle.scrollStyle = scrollPaneStyle;
-        
-        // CheckBox style with larger size and visible checkmark
-        CheckBox.CheckBoxStyle checkBoxStyle = new CheckBox.CheckBoxStyle();
-        checkBoxStyle.font = font;
-        checkBoxStyle.fontColor = Color.WHITE;
-        checkBoxStyle.checkboxOn = skin.getDrawable("checkbox-checked");
-        checkBoxStyle.checkboxOff = skin.getDrawable("checkbox");
-        checkBoxStyle.checkboxOver = skin.newDrawable("checkbox", Color.GRAY);
-        checkBoxStyle.checkboxOnOver = skin.newDrawable("checkbox-checked", Color.LIGHT_GRAY);
-        
-        skin.add("default", labelStyle);
-        skin.add("default", buttonStyle);
-        skin.add("default", selectBoxStyle);
-        skin.add("default", checkBoxStyle);
-        
-        // Create UI elements
-        titleLabel = new Label(localization.getText("options.title"), labelStyle);
-        
-        // Language section
-        languageLabel = new Label(localization.getText("options.language") + ":", labelStyle);
-        spanishButton = new TextButton(localization.getText("options.spanish"), buttonStyle);
-        englishButton = new TextButton(localization.getText("options.english"), buttonStyle);
-        
-        // Display section
-        displayLabel = new Label(localization.getText("options.display") + ":", labelStyle);
-        resolutionLabel = new Label(localization.getText("options.resolution") + ":", labelStyle);
-        
-        // Resolution SelectBox
-        resolutionSelectBox = new SelectBox<>(selectBoxStyle);
-        resolutionSelectBox.setItems(GameConfig.AVAILABLE_RESOLUTIONS);
-        resolutionSelectBox.setSelected(gameConfig.getCurrentResolution());
-        
-        // FPS section
-        fpsLabel = new Label(localization.getText("options.fps") + ":", labelStyle);
-        
-        // FPS SelectBox
-        fpsSelectBox = new SelectBox<>(selectBoxStyle);
-        fpsSelectBox.setItems(GameConfig.AVAILABLE_FPS_OPTIONS);
-        fpsSelectBox.setSelected(gameConfig.getCurrentFPSOption());
-        
-        // Fullscreen CheckBox
-        fullscreenCheckBox = new CheckBox(" " + localization.getText("options.fullscreen"), checkBoxStyle);
-        fullscreenCheckBox.setChecked(gameConfig.isFullscreen());
-        
-        // Action buttons
-        applyButton = new TextButton(localization.getText("options.apply"), buttonStyle);
-        backButton = new TextButton(localization.getText("options.back"), buttonStyle);
-        
-        // Configure button listeners
-        spanishButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                localization.setLanguage(LocalizationManager.Language.SPANISH);
-                refreshUI();
-                Gdx.app.log("OptionsScreen", "Language changed to Spanish");
-            }
-        });
-        
-        englishButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                localization.setLanguage(LocalizationManager.Language.ENGLISH);
-                refreshUI();
-                Gdx.app.log("OptionsScreen", "Language changed to English");
-            }
-        });
-        
-        applyButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                applySettings();
-            }
-        });
-        
-        backButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                game.showMainMenu();
-            }
-        });
-        
-        // Create main table to organize elements
-        mainTable = new Table();
-        mainTable.setFillParent(true);
-        mainTable.center();
-        
-        // Add elements to the table
-        mainTable.add(titleLabel).colspan(2).padBottom(30).row();
-        
-        // Language section
-        mainTable.add(languageLabel).colspan(2).padBottom(10).row();
-        Table languageTable = new Table();
-        languageTable.add(spanishButton).width(150).height(50).padRight(10);
-        languageTable.add(englishButton).width(150).height(50);
-        mainTable.add(languageTable).colspan(2).padBottom(30).row();
-        
-        // Display section
-        mainTable.add(displayLabel).colspan(2).padBottom(10).row();
-        
-        // Resolution
-        mainTable.add(resolutionLabel).padRight(20);
-        mainTable.add(resolutionSelectBox).width(300).height(50).padBottom(10).row();
-        
-        // FPS
-        mainTable.add(fpsLabel).padRight(20);
-        mainTable.add(fpsSelectBox).width(300).height(50).padBottom(10).row();
-        
-        // Fullscreen CheckBox with better layout and size
-        fullscreenCheckBox = new CheckBox(" " + localization.getText("options.fullscreen"), checkBoxStyle);
-        fullscreenCheckBox.setChecked(gameConfig.isFullscreen());
-        mainTable.add(fullscreenCheckBox).colspan(2).height(50).padBottom(30).row();
-        
-        // Action buttons
-        Table buttonTable = new Table();
-        buttonTable.add(applyButton).width(150).height(50).padRight(10);
-        buttonTable.add(backButton).width(150).height(50);
-        mainTable.add(buttonTable).colspan(2);
-        
-        // Add table to stage
-        stage.addActor(mainTable);
+        // Load current settings
+        loadCurrentSettings();
     }
     
-    /**
-     * Apply the selected settings
-     */
+    private void loadCurrentSettings() {
+        // Find current resolution index
+        GameConfig.Resolution currentRes = gameConfig.getCurrentResolution();
+        for (int i = 0; i < GameConfig.AVAILABLE_RESOLUTIONS.length; i++) {
+            if (GameConfig.AVAILABLE_RESOLUTIONS[i].equals(currentRes)) {
+                selectedResolutionIndex = i;
+                break;
+            }
+        }
+        
+        // Find current FPS index
+        GameConfig.FPSOption currentFPS = gameConfig.getCurrentFPSOption();
+        for (int i = 0; i < GameConfig.AVAILABLE_FPS_OPTIONS.length; i++) {
+            if (GameConfig.AVAILABLE_FPS_OPTIONS[i].equals(currentFPS)) {
+                selectedFPSIndex = i;
+                break;
+            }
+        }
+        
+        fullscreenEnabled = gameConfig.isFullscreen();
+    }
+    
+    private void handleInput() {
+        // Navigate with arrow keys or WASD
+        if (Gdx.input.isKeyJustPressed(Keys.UP) || Gdx.input.isKeyJustPressed(Keys.W)) {
+            selectedOptionIndex = (selectedOptionIndex - 1 + menuOptions.length) % menuOptions.length;
+        } else if (Gdx.input.isKeyJustPressed(Keys.DOWN) || Gdx.input.isKeyJustPressed(Keys.S)) {
+            selectedOptionIndex = (selectedOptionIndex + 1) % menuOptions.length;
+        }
+        
+        // Handle horizontal navigation for select boxes
+        if (Gdx.input.isKeyJustPressed(Keys.LEFT) || Gdx.input.isKeyJustPressed(Keys.A)) {
+            handleLeftNavigation();
+        } else if (Gdx.input.isKeyJustPressed(Keys.RIGHT) || Gdx.input.isKeyJustPressed(Keys.D)) {
+            handleRightNavigation();
+        }
+        
+        // Select with Enter or Space
+        if (Gdx.input.isKeyJustPressed(Keys.ENTER) || Gdx.input.isKeyJustPressed(Keys.SPACE)) {
+            selectCurrentOption();
+        }
+        
+        // Back with Escape
+        if (Gdx.input.isKeyJustPressed(Keys.ESCAPE)) {
+            goBack();
+        }
+    }
+    
+    private void handleLeftNavigation() {
+        MenuOption currentOption = menuOptions[selectedOptionIndex];
+        switch (currentOption) {
+            case RESOLUTION_SELECT:
+                selectedResolutionIndex = (selectedResolutionIndex - 1 + GameConfig.AVAILABLE_RESOLUTIONS.length) % GameConfig.AVAILABLE_RESOLUTIONS.length;
+                break;
+            case FPS_SELECT:
+                selectedFPSIndex = (selectedFPSIndex - 1 + GameConfig.AVAILABLE_FPS_OPTIONS.length) % GameConfig.AVAILABLE_FPS_OPTIONS.length;
+                break;
+            case FULLSCREEN_TOGGLE:
+                fullscreenEnabled = !fullscreenEnabled;
+                break;
+        }
+    }
+    
+    private void handleRightNavigation() {
+        MenuOption currentOption = menuOptions[selectedOptionIndex];
+        switch (currentOption) {
+            case RESOLUTION_SELECT:
+                selectedResolutionIndex = (selectedResolutionIndex + 1) % GameConfig.AVAILABLE_RESOLUTIONS.length;
+                break;
+            case FPS_SELECT:
+                selectedFPSIndex = (selectedFPSIndex + 1) % GameConfig.AVAILABLE_FPS_OPTIONS.length;
+                break;
+            case FULLSCREEN_TOGGLE:
+                fullscreenEnabled = !fullscreenEnabled;
+                break;
+        }
+    }
+    
+    private void selectCurrentOption() {
+        MenuOption currentOption = menuOptions[selectedOptionIndex];
+        switch (currentOption) {
+            case SPANISH_BUTTON:
+                localization.setLanguage(LocalizationManager.Language.SPANISH);
+                Gdx.app.log("OptionsScreen", "Language changed to Spanish");
+                break;
+            case ENGLISH_BUTTON:
+                localization.setLanguage(LocalizationManager.Language.ENGLISH);
+                Gdx.app.log("OptionsScreen", "Language changed to English");
+                break;
+            case RESOLUTION_SELECT:
+            case FPS_SELECT:
+            case FULLSCREEN_TOGGLE:
+                // These are handled by left/right navigation
+                break;
+            case APPLY_BUTTON:
+                applySettings();
+                break;
+            case BACK_BUTTON:
+                goBack();
+                break;
+        }
+    }
+    
     private void applySettings() {
         try {
             // Apply resolution
-            GameConfig.Resolution selectedResolution = resolutionSelectBox.getSelected();
+            GameConfig.Resolution selectedResolution = GameConfig.AVAILABLE_RESOLUTIONS[selectedResolutionIndex];
             gameConfig.setResolution(selectedResolution);
             
             // Apply FPS setting
-            GameConfig.FPSOption selectedFPS = fpsSelectBox.getSelected();
+            GameConfig.FPSOption selectedFPS = GameConfig.AVAILABLE_FPS_OPTIONS[selectedFPSIndex];
             gameConfig.setFPSOption(selectedFPS);
             
             // Apply fullscreen setting
-            gameConfig.setFullscreen(fullscreenCheckBox.isChecked());
+            gameConfig.setFullscreen(fullscreenEnabled);
             
             Gdx.app.log("OptionsScreen", "Configuration applied: " + 
                 selectedResolution.displayName + ", FPS: " + selectedFPS.displayName + 
-                ", Fullscreen: " + fullscreenCheckBox.isChecked());
+                ", Fullscreen: " + fullscreenEnabled);
                 
         } catch (Exception e) {
             Gdx.app.error("OptionsScreen", "Error applying configuration: " + e.getMessage());
         }
     }
     
-    /**
-     * Refresh UI text after language change
-     */
-    private void refreshUI() {
-        titleLabel.setText(localization.getText("options.title"));
-        languageLabel.setText(localization.getText("options.language") + ":");
-        spanishButton.setText(localization.getText("options.spanish"));
-        englishButton.setText(localization.getText("options.english"));
-        displayLabel.setText(localization.getText("options.display") + ":");
-        resolutionLabel.setText(localization.getText("options.resolution") + ":");
-        fpsLabel.setText(localization.getText("options.fps") + ":");
-        // Update checkbox text directly
-        fullscreenCheckBox.setText(" " + localization.getText("options.fullscreen"));
-        applyButton.setText(localization.getText("options.apply"));
-        backButton.setText(localization.getText("options.back"));
+    private void goBack() {
+        switch (context) {
+            case MAIN_MENU:
+                game.showMainMenu();
+                break;
+            case PAUSE_MENU:
+                game.resumeGame();
+                break;
+        }
     }
     
     @Override
     public void show() {
-        Gdx.input.setInputProcessor(stage);
+        // Screen is now active
     }
     
     @Override
     public void render(float delta) {
-        // Clear screen with dark color
-        Gdx.gl.glClearColor(0.05f, 0.05f, 0.15f, 1);
+        handleInput();
+        
+        // Clear screen
+        Gdx.gl.glClearColor(BACKGROUND_COLOR.r, BACKGROUND_COLOR.g, BACKGROUND_COLOR.b, BACKGROUND_COLOR.a);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         
-        // Update and render stage
-        stage.act(delta);
-        stage.draw();
+        camera.update();
+        batch.setProjectionMatrix(camera.combined);
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        
+        // Draw background elements
+        drawBackground();
+        
+        // Draw UI elements
+        batch.begin();
+        drawTitle();
+        drawLanguageSection();
+        drawDisplaySection();
+        drawActionButtons();
+        drawInstructions();
+        batch.end();
+    }
+    
+    private void drawBackground() {
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        
+        // Draw selection highlight
+        MenuOption currentOption = menuOptions[selectedOptionIndex];
+        float highlightY = getOptionY(currentOption);
+        float highlightHeight = getOptionHeight(currentOption);
+        
+        shapeRenderer.setColor(0.2f, 0.2f, 0.4f, 0.5f);
+        shapeRenderer.rect(50, highlightY - highlightHeight/2, 700, highlightHeight);
+        
+        // Draw section separators
+        shapeRenderer.setColor(0.3f, 0.3f, 0.3f, 0.8f);
+        shapeRenderer.rect(100, 420, 600, 2); // After language section
+        shapeRenderer.rect(100, 220, 600, 2); // After display section
+        
+        shapeRenderer.end();
+    }
+    
+    private void drawTitle() {
+        String title = localization.getText("options.title");
+        glyphLayout.setText(titleFont, title);
+        float x = (800 - glyphLayout.width) / 2;
+        titleFont.draw(batch, title, x, 550);
+    }
+    
+    private void drawLanguageSection() {
+        // Section title
+        font.setColor(SECTION_COLOR);
+        String languageTitle = localization.getText("options.language") + ":";
+        font.draw(batch, languageTitle, 100, 480);
+        
+        // Language buttons
+        drawOption(MenuOption.SPANISH_BUTTON, localization.getText("options.spanish"), 150, 450);
+        drawOption(MenuOption.ENGLISH_BUTTON, localization.getText("options.english"), 350, 450);
+    }
+    
+    private void drawDisplaySection() {
+        // Section title
+        font.setColor(SECTION_COLOR);
+        String displayTitle = localization.getText("options.display") + ":";
+        font.draw(batch, displayTitle, 100, 380);
+        
+        // Resolution
+        String resolutionText = localization.getText("options.resolution") + ": " + 
+            GameConfig.AVAILABLE_RESOLUTIONS[selectedResolutionIndex].displayName;
+        drawOption(MenuOption.RESOLUTION_SELECT, resolutionText, 150, 350);
+        
+        // FPS
+        String fpsText = localization.getText("options.fps") + ": " + 
+            GameConfig.AVAILABLE_FPS_OPTIONS[selectedFPSIndex].displayName;
+        drawOption(MenuOption.FPS_SELECT, fpsText, 150, 320);
+        
+        // Fullscreen
+        String fullscreenText = localization.getText("options.fullscreen") + ": " + 
+            (fullscreenEnabled ? "ON" : "OFF");
+        drawOption(MenuOption.FULLSCREEN_TOGGLE, fullscreenText, 150, 290);
+    }
+    
+    private void drawActionButtons() {
+        drawOption(MenuOption.APPLY_BUTTON, localization.getText("options.apply"), 250, 180);
+        drawOption(MenuOption.BACK_BUTTON, localization.getText("options.back"), 450, 180);
+    }
+    
+    private void drawInstructions() {
+        font.setColor(new Color(0.6f, 0.6f, 0.6f, 1));
+        String instructions = "W/S: " + localization.getText("pause.instructions").split("  ")[0].split(": ")[1] + 
+                            "  A/D: Cambiar  ENTER: Seleccionar  ESC: Volver";
+        glyphLayout.setText(font, instructions);
+        float x = (800 - glyphLayout.width) / 2;
+        font.draw(batch, instructions, x, 50);
+    }
+    
+    private void drawOption(MenuOption option, String text, float x, float y) {
+        boolean isSelected = menuOptions[selectedOptionIndex] == option;
+        font.setColor(isSelected ? SELECTED_COLOR : NORMAL_COLOR);
+        
+        if (isSelected) {
+            // Draw selection indicator
+            font.draw(batch, "> ", x - 30, y);
+        }
+        
+        font.draw(batch, text, x, y);
+    }
+    
+    private float getOptionY(MenuOption option) {
+        switch (option) {
+            case SPANISH_BUTTON: return 450;
+            case ENGLISH_BUTTON: return 450;
+            case RESOLUTION_SELECT: return 350;
+            case FPS_SELECT: return 320;
+            case FULLSCREEN_TOGGLE: return 290;
+            case APPLY_BUTTON: return 180;
+            case BACK_BUTTON: return 180;
+            default: return 0;
+        }
+    }
+    
+    private float getOptionHeight(MenuOption option) {
+        return 30; // Standard height for all options
     }
     
     @Override
     public void resize(int width, int height) {
-        stage.getViewport().update(width, height, true);
+        camera.setToOrtho(false, width, height);
     }
     
     @Override
@@ -344,8 +381,9 @@ public class OptionsScreen implements Screen {
     
     @Override
     public void dispose() {
-        stage.dispose();
         batch.dispose();
         font.dispose();
+        titleFont.dispose();
+        shapeRenderer.dispose();
     }
 }

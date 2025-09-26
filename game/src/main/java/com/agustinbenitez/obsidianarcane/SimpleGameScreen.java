@@ -23,14 +23,16 @@ public class SimpleGameScreen implements Screen {
     private ShapeRenderer shapeRenderer;
     private OrthographicCamera camera;
     private GameWorld gameWorld;
+    private LocalizationManager localization;
     
     // Pause menu state
     private boolean isPaused;
     private int selectedMenuOption;
-    private String[] pauseMenuOptions = {"Reanudar", "Reiniciar", "Menú Principal"};
     
     public SimpleGameScreen(GameStateManager game) {
         this.game = game;
+        this.localization = LocalizationManager.getInstance();
+        
         batch = new SpriteBatch();
         font = new BitmapFont();
         font.getData().setScale(1.5f);
@@ -98,11 +100,12 @@ public class SimpleGameScreen implements Screen {
     private void handleInput() {
         if (isPaused) {
             // Handle pause menu input
+            int menuOptionsCount = 3; // Resume, Restart, Main Menu
             if (Gdx.input.isKeyJustPressed(Keys.UP) || Gdx.input.isKeyJustPressed(Keys.W)) {
-                selectedMenuOption = (selectedMenuOption - 1 + pauseMenuOptions.length) % pauseMenuOptions.length;
+                selectedMenuOption = (selectedMenuOption - 1 + menuOptionsCount) % menuOptionsCount;
             }
             if (Gdx.input.isKeyJustPressed(Keys.DOWN) || Gdx.input.isKeyJustPressed(Keys.S)) {
-                selectedMenuOption = (selectedMenuOption + 1) % pauseMenuOptions.length;
+                selectedMenuOption = (selectedMenuOption + 1) % menuOptionsCount;
             }
             if (Gdx.input.isKeyJustPressed(Keys.ENTER) || Gdx.input.isKeyJustPressed(Keys.SPACE)) {
                 handlePauseMenuSelection();
@@ -163,12 +166,19 @@ public class SimpleGameScreen implements Screen {
         // Menu title
         font.getData().setScale(2.0f);
         font.setColor(Color.WHITE);
-        glyphLayout.setText(font, "PAUSA");
+        String pauseTitle = localization.getText("pause.title");
+        glyphLayout.setText(font, pauseTitle);
         float titleWidth = glyphLayout.width;
-        font.draw(batch, "PAUSA", 400 - titleWidth / 2, 370);
+        font.draw(batch, pauseTitle, 400 - titleWidth / 2, 370);
         
         // Menu options
         font.getData().setScale(1.5f);
+        String[] pauseMenuOptions = {
+            localization.getText("pause.resume"),
+            localization.getText("pause.settings"),
+            localization.getText("pause.main_menu")
+        };
+        
         for (int i = 0; i < pauseMenuOptions.length; i++) {
             if (i == selectedMenuOption) {
                 font.setColor(Color.YELLOW);
@@ -182,7 +192,8 @@ public class SimpleGameScreen implements Screen {
         // Instructions
         font.getData().setScale(1.0f);
         font.setColor(Color.LIGHT_GRAY);
-        font.draw(batch, "W/S: Navegar  ENTER/SPACE: Seleccionar  ESC: Reanudar", 260, 180);
+        String instructions = localization.getText("pause.instructions");
+        font.draw(batch, instructions, 260, 180);
     }
     
     /**
@@ -193,9 +204,8 @@ public class SimpleGameScreen implements Screen {
             case 0: // Reanudar
                 isPaused = false;
                 break;
-            case 1: // Reiniciar
-                gameWorld.resetPlayer();
-                isPaused = false;
+            case 1: // Ajustes
+                game.showOptions(com.agustinbenitez.obsidianarcane.menu.OptionsScreen.ScreenContext.PAUSE_MENU);
                 break;
             case 2: // Menú Principal
                 game.showMainMenu();

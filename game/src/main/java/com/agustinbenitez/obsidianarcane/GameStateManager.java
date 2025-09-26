@@ -131,6 +131,14 @@ public class GameStateManager extends Game {
      * Mostrar pantalla de opciones
      */
     public void showOptions() {
+        showOptions(OptionsScreen.ScreenContext.MAIN_MENU);
+    }
+    
+    /**
+     * Mostrar pantalla de opciones con contexto específico
+     */
+    public void showOptions(OptionsScreen.ScreenContext context) {
+        optionsScreen = new OptionsScreen(this, context);
         setScreen(optionsScreen);
     }
     

@@ -3,6 +3,7 @@ package com.agustinbenitez.obsidianarcane;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -83,6 +84,7 @@ public class Room {
     private void handlePlatformCollision(Player player, Platform platform) {
         Rectangle playerBounds = player.getBounds();
         Rectangle platformBounds = platform.getBounds();
+        Vector2 playerVelocity = player.getVelocity();
         
         // Calculate overlap on each axis
         float overlapX = Math.min(playerBounds.x + playerBounds.width - platformBounds.x,
@@ -90,24 +92,27 @@ public class Room {
         float overlapY = Math.min(playerBounds.y + playerBounds.height - platformBounds.y,
                                  platformBounds.y + platformBounds.height - playerBounds.y);
         
-        // Resolve collision based on smallest overlap
-        if (overlapX < overlapY) {
+        // Add small tolerance to prevent floating point precision issues
+        final float TOLERANCE = 0.1f;
+        
+        // Resolve collision based on smallest overlap and player velocity
+        if (overlapX < overlapY + TOLERANCE) {
             // Horizontal collision (walls)
-            if (playerBounds.x < platformBounds.x) {
-                // Player hitting from left
-                player.handleWallCollision(platformBounds.x, true);
-            } else {
-                // Player hitting from right
+            if (playerVelocity.x < 0 && playerBounds.x < platformBounds.x + platformBounds.width / 2) {
+                // Player moving left and hitting right side of platform
                 player.handleWallCollision(platformBounds.x + platformBounds.width, false);
+            } else if (playerVelocity.x > 0 && playerBounds.x > platformBounds.x - platformBounds.width / 2) {
+                // Player moving right and hitting left side of platform
+                player.handleWallCollision(platformBounds.x, true);
             }
         } else {
             // Vertical collision (ground/ceiling)
-            if (playerBounds.y < platformBounds.y) {
-                // Player hitting from below (ground)
-                player.handleGroundCollision(platformBounds.y);
-            } else {
-                // Player hitting from above (ceiling)
-                player.handleCeilingCollision(platformBounds.y + platformBounds.height);
+            if (playerVelocity.y <= 0 && playerBounds.y > platformBounds.y) {
+                // Player falling and hitting top of platform (ground)
+                player.handleGroundCollision(platformBounds.y + platformBounds.height);
+            } else if (playerVelocity.y > 0 && playerBounds.y < platformBounds.y) {
+                // Player jumping and hitting bottom of platform (ceiling)
+                player.handleCeilingCollision(platformBounds.y);
             }
         }
     }
