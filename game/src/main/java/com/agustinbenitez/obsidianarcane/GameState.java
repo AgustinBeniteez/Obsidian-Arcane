@@ -28,7 +28,7 @@ public class GameState implements Serializable {
     
     public GameState() {
         this.saveDate = new Date();
-        this.saveName = "Partida " + System.currentTimeMillis();
+        this.saveName = "Game " + System.currentTimeMillis();
         this.playerLevel = 1;
         this.playerExperience = 0;
         this.playerHealth = 100;

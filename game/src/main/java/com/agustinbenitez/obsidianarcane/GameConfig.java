@@ -16,7 +16,7 @@ public class GameConfig {
     private static GameConfig instance;
     private static final String CONFIG_FILE = "config.json";
     
-    // Configuraciones por defecto
+    // Default configurations
     private int windowWidth = 1920;
     private int windowHeight = 1080;
     private boolean fullscreen = true;
@@ -39,7 +39,7 @@ public class GameConfig {
         new FPSOption(60, "60 FPS"),
         new FPSOption(120, "120 FPS"),
         new FPSOption(144, "144 FPS"),
-        new FPSOption(0, "Ilimitado")
+        new FPSOption(0, "Unlimited")
     };
     
     private GameConfig() {
@@ -71,13 +71,13 @@ public class GameConfig {
                 this.vsync = loadedConfig.vsync;
                 this.targetFPS = loadedConfig.targetFPS;
                 
-                System.out.println("GameConfig: Configuración cargada desde " + CONFIG_FILE);
+                System.out.println("GameConfig: Configuration loaded from " + CONFIG_FILE);
             } else {
-                System.out.println("GameConfig: Archivo de configuración no encontrado, usando valores por defecto");
+                System.out.println("GameConfig: Configuration file not found, using default values");
                 saveConfigWithJavaIO(); // Crear archivo con valores por defecto
             }
         } catch (Exception e) {
-            System.err.println("GameConfig: Error al cargar configuración: " + e.getMessage());
+            System.err.println("GameConfig: Error loading configuration: " + e.getMessage());
         }
     }
     
@@ -94,9 +94,9 @@ public class GameConfig {
                 FileHandle configFile = Gdx.files.local(CONFIG_FILE);
                 configFile.writeString(json, false);
                 
-                Gdx.app.log("GameConfig", "Configuración guardada en " + CONFIG_FILE);
+                Gdx.app.log("GameConfig", "Configuration saved to " + CONFIG_FILE);
             } catch (Exception e) {
-                Gdx.app.error("GameConfig", "Error al guardar configuración: " + e.getMessage());
+                Gdx.app.error("GameConfig", "Error saving configuration: " + e.getMessage());
             }
         } else {
             // Use Java IO when LibGDX is not available
@@ -115,9 +115,9 @@ public class GameConfig {
             java.io.File configFile = new java.io.File(CONFIG_FILE);
             java.nio.file.Files.write(configFile.toPath(), json.getBytes());
             
-            System.out.println("GameConfig: Configuración guardada en " + CONFIG_FILE);
+            System.out.println("GameConfig: Configuration saved to " + CONFIG_FILE);
         } catch (Exception e) {
-            System.err.println("GameConfig: Error al guardar configuración: " + e.getMessage());
+            System.err.println("GameConfig: Error saving configuration: " + e.getMessage());
         }
     }
     
@@ -126,7 +126,7 @@ public class GameConfig {
      */
     public void applyConfig() {
         if (Gdx.graphics == null) {
-            Gdx.app.log("GameConfig", "Graphics no disponible, configuración aplicada al inicializar");
+            Gdx.app.log("GameConfig", "Graphics not available, configuration will be applied on initialization");
             return;
         }
         
@@ -137,11 +137,11 @@ public class GameConfig {
                 // Cambiar a pantalla completa
                 Graphics.DisplayMode displayMode = graphics.getDisplayMode();
                 graphics.setFullscreenMode(displayMode);
-                Gdx.app.log("GameConfig", "Cambiado a pantalla completa: " + displayMode.width + "x" + displayMode.height);
+                Gdx.app.log("GameConfig", "Changed to fullscreen: " + displayMode.width + "x" + displayMode.height);
             } else {
                 // Cambiar a modo ventana
                 graphics.setWindowedMode(windowWidth, windowHeight);
-                Gdx.app.log("GameConfig", "Cambiado a modo ventana: " + windowWidth + "x" + windowHeight);
+                Gdx.app.log("GameConfig", "Changed to windowed mode: " + windowWidth + "x" + windowHeight);
             }
             
             // Aplicar VSync
@@ -150,15 +150,15 @@ public class GameConfig {
             // Aplicar configuración de FPS
             if (targetFPS > 0) {
                 graphics.setForegroundFPS(targetFPS);
-                Gdx.app.log("GameConfig", "FPS limitado a: " + targetFPS);
+                Gdx.app.log("GameConfig", "FPS limited to: " + targetFPS);
             } else {
                 // FPS ilimitado - usar un valor muy alto
                 graphics.setForegroundFPS(0);
-                Gdx.app.log("GameConfig", "FPS ilimitado activado");
+                Gdx.app.log("GameConfig", "Unlimited FPS activated");
             }
             
         } catch (Exception e) {
-            Gdx.app.error("GameConfig", "Error al aplicar configuración: " + e.getMessage());
+            Gdx.app.error("GameConfig", "Error applying configuration: " + e.getMessage());
         }
     }
     

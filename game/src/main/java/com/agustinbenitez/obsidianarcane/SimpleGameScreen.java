@@ -43,7 +43,7 @@ public class SimpleGameScreen implements Screen {
         
         // Mensaje principal
         font.setColor(Color.WHITE);
-        String message = "Pantalla de Juego Simple";
+        String message = "Simple Game Screen";
         glyphLayout.setText(font, message);
         float messageWidth = glyphLayout.width;
         font.draw(batch, message, 
@@ -53,7 +53,7 @@ public class SimpleGameScreen implements Screen {
         // Instrucciones
         font.getData().setScale(1.0f);
         font.setColor(Color.LIGHT_GRAY);
-        String instructions = "Presiona ESC para volver al menú principal";
+        String instructions = "Press ESC to return to main menu";
         glyphLayout.setText(font, instructions);
         float instructionsWidth = glyphLayout.width;
         font.draw(batch, instructions, 

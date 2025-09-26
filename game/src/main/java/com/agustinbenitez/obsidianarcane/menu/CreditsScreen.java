@@ -76,7 +76,7 @@ public class CreditsScreen implements Screen {
     
     @Override
     public void show() {
-        Gdx.app.log("CreditsScreen", "Mostrando pantalla de créditos");
+        Gdx.app.log("CreditsScreen", "Showing credits screen");
     }
     
     @Override

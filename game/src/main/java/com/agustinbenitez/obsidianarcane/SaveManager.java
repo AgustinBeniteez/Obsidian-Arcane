@@ -47,7 +47,7 @@ public class SaveManager {
      */
     public boolean saveGame(int slot, GameState gameState) {
         if (slot < 1 || slot > MAX_SAVE_SLOTS) {
-            Gdx.app.error("SaveManager", "Slot inválido: " + slot + ". Debe estar entre 1 y " + MAX_SAVE_SLOTS);
+            Gdx.app.error("SaveManager", "Invalid slot: " + slot + ". Must be between 1 and " + MAX_SAVE_SLOTS);
             return false;
         }
         
@@ -82,7 +82,7 @@ public class SaveManager {
      */
     public GameState loadGame(int slot) {
         if (slot < 1 || slot > MAX_SAVE_SLOTS) {
-            Gdx.app.error("SaveManager", "Slot inválido: " + slot + ". Debe estar entre 1 y " + MAX_SAVE_SLOTS);
+            Gdx.app.error("SaveManager", "Invalid slot: " + slot + ". Must be between 1 and " + MAX_SAVE_SLOTS);
             return null;
         }
         
@@ -124,7 +124,7 @@ public class SaveManager {
      */
     public boolean deleteSave(int slot) {
         if (slot < 1 || slot > MAX_SAVE_SLOTS) {
-            Gdx.app.error("SaveManager", "Slot inválido: " + slot + ". Debe estar entre 1 y " + MAX_SAVE_SLOTS);
+            Gdx.app.error("SaveManager", "Invalid slot: " + slot + ". Must be between 1 and " + MAX_SAVE_SLOTS);
             return false;
         }
         

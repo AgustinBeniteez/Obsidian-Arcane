@@ -112,7 +112,7 @@ public class GameStateManager extends Game {
      */
     public void startNewGameInSlot(int slot) {
         // Crear nuevo estado de juego con nombre automático
-        String saveName = "Partida " + slot;
+        String saveName = "Game " + slot;
         currentGameState = new GameState(saveName, "Mundo 2D", new Vector2(800, 640)); // Posición central del mapa
         
         // Guardar la nueva partida en el slot especificado

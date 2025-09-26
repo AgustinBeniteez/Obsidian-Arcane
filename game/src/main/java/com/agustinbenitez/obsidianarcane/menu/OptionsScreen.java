@@ -100,7 +100,7 @@ public class OptionsScreen implements Screen {
         
         // Create checked checkbox texture with checkmark
         com.badlogic.gdx.graphics.Pixmap checkboxCheckedPixmap = new com.badlogic.gdx.graphics.Pixmap(32, 32, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
-        checkboxCheckedPixmap.setColor(new Color(0.0f, 0.6f, 0.0f, 1.0f)); // Verde más oscuro
+        checkboxCheckedPixmap.setColor(new Color(0.0f, 0.6f, 0.0f, 1.0f)); // Darker green
         checkboxCheckedPixmap.fill();
         // Draw border
         checkboxCheckedPixmap.setColor(Color.WHITE);
@@ -202,7 +202,7 @@ public class OptionsScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 localization.setLanguage(LocalizationManager.Language.SPANISH);
                 refreshUI();
-                Gdx.app.log("OptionsScreen", "Idioma cambiado a Español");
+                Gdx.app.log("OptionsScreen", "Language changed to Spanish");
             }
         });
         
@@ -286,12 +286,12 @@ public class OptionsScreen implements Screen {
             // Apply fullscreen setting
             gameConfig.setFullscreen(fullscreenCheckBox.isChecked());
             
-            Gdx.app.log("OptionsScreen", "Configuración aplicada: " + 
+            Gdx.app.log("OptionsScreen", "Configuration applied: " + 
                 selectedResolution.displayName + ", FPS: " + selectedFPS.displayName + 
-                ", Pantalla completa: " + fullscreenCheckBox.isChecked());
+                ", Fullscreen: " + fullscreenCheckBox.isChecked());
                 
         } catch (Exception e) {
-            Gdx.app.error("OptionsScreen", "Error al aplicar configuración: " + e.getMessage());
+            Gdx.app.error("OptionsScreen", "Error applying configuration: " + e.getMessage());
         }
     }
     

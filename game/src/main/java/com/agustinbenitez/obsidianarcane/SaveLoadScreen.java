@@ -126,7 +126,7 @@ public class SaveLoadScreen implements Screen {
         
         // Crear nombre automático si no tiene
         if (currentGameState.getSaveName() == null || currentGameState.getSaveName().isEmpty()) {
-            currentGameState.setSaveName("Partida " + selectedSlot);
+            currentGameState.setSaveName("Game " + selectedSlot);
         }
         
         boolean success = saveManager.saveGame(selectedSlot, currentGameState);

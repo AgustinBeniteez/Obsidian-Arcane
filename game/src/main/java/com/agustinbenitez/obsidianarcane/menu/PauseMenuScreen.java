@@ -142,7 +142,7 @@ public class PauseMenuScreen implements Screen {
                 break;
             case SETTINGS:
                 // TODO: Implementar pantalla de ajustes
-                Gdx.app.log("PauseMenu", "Ajustes no implementados aún");
+                Gdx.app.log("PauseMenu", "Settings not implemented yet");
                 break;
             case MAIN_MENU:
                 // Guardar automáticamente antes de salir
@@ -161,7 +161,7 @@ public class PauseMenuScreen implements Screen {
                     int slotToSave = findBestSlotForAutoSave(saveManager);
                     saveManager.saveGame(slotToSave, currentState);
                     
-                    Gdx.app.log("PauseMenu", "Partida guardada automáticamente en slot " + slotToSave);
+                    Gdx.app.log("PauseMenu", "Game automatically saved in slot " + slotToSave);
                 }
                 
                 game.showMainMenu();
